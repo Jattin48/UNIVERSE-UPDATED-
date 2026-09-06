@@ -1,0 +1,194 @@
+<div class="dashboard-container" *ngIf="college">
+  <!-- Header / Status banner -->
+  <div class="dash-header">
+    <div>
+      <h2>🏛️ {{ college.name }} - Portal</h2>
+      <p>Manage your college courses, annual fees, verification documents & student leads</p>
+    </div>
+
+    <div class="status-box">
+      <span class="status-label">Moderation Status:</span>
+      <span class="badge-status" [ngClass]="college.registrationStatus">
+        {{ college.registrationStatus | uppercase }}
+      </span>
+      <p class="status-note" *ngIf="college.registrationStatus === 'pending'">
+        ⚠️ Your listing is pending Admin approval before appearing publicly in search results.
+      </p>
+    </div>
+  </div>
+
+  <!-- Navigation Tabs -->
+  <div class="dash-tabs">
+    <button [class.active]="activeTab === 'listing'" (click)="activeTab = 'listing'">
+      🏢 Basic Info & Location
+    </button>
+    <button [class.active]="activeTab === 'courses'" (click)="activeTab = 'courses'">
+      🎓 Courses & Cutoffs ({{ college.coursesOffered.length || 0 }})
+    </button>
+    <button [class.active]="activeTab === 'documents'" (click)="activeTab = 'documents'">
+      📄 Verification Documents ({{ college.documentsForVerification?.length || 0 }})
+    </button>
+    <button [class.active]="activeTab === 'leads'" (click)="activeTab = 'leads'">
+      📥 Student Leads ({{ leads.length }})
+    </button>
+  </div>
+
+  <div *ngIf="successMessage" class="alert-success">{{ successMessage }}</div>
+
+  <!-- TAB 1: Listing details -->
+  <div class="tab-content" *ngIf="activeTab === 'listing'">
+    <form (ngSubmit)="saveListing()" class="dash-form">
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label>College Name *</label>
+          <input type="text" [(ngModel)]="college.name" name="name" required />
+        </div>
+        <div class="form-group">
+          <label>Affiliation / Accreditation</label>
+          <input type="text" [(ngModel)]="college.affiliation" name="affiliation" />
+        </div>
+      </div>
+
+      <div class="form-grid-2 mt-3">
+        <div class="form-group">
+          <label>City *</label>
+          <input type="text" [(ngModel)]="college.location.city" name="city" required />
+        </div>
+        <div class="form-group">
+          <label>State *</label>
+          <input type="text" [(ngModel)]="college.location.state" name="state" required />
+        </div>
+      </div>
+
+      <div class="form-grid-2 mt-3">
+        <div class="form-group">
+          <label>Institution Type</label>
+          <select [(ngModel)]="college.type" name="type">
+            <option value="Government">Government</option>
+            <option value="Private">Private</option>
+            <option value="Deemed">Deemed University</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Official Website</label>
+          <input type="url" [(ngModel)]="college.website" name="website" placeholder="https://..." />
+        </div>
+      </div>
+
+      <div class="form-group mt-3">
+        <label>Admission Process Description</label>
+        <textarea
+          rows="3"
+          [(ngModel)]="college.admissionProcess"
+          name="admissionProcess"
+          placeholder="Detail merit calculation, entrance tests required..."
+        ></textarea>
+      </div>
+
+      <button type="submit" [disabled]="isSaving" class="btn-save mt-3">Save Basic Info</button>
+    </form>
+  </div>
+
+  <!-- TAB 2: Courses Management -->
+  <div class="tab-content" *ngIf="activeTab === 'courses'">
+    <h3>Current Offered Courses</h3>
+    <table class="data-table mb-4" *ngIf="college.coursesOffered && college.coursesOffered.length > 0">
+      <thead>
+        <tr>
+          <th>Course Name</th>
+          <th>Duration</th>
+          <th>Annual Fee</th>
+          <th>Cutoff %</th>
+          <th>Seats</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let course of college.coursesOffered; let i = index">
+          <td><strong>{{ course.name }}</strong></td>
+          <td>{{ course.duration }}</td>
+          <td>₹{{ course.annualFee | number }}</td>
+          <td>{{ course.cutoff }}%</td>
+          <td>{{ course.seats }}</td>
+          <td>
+            <button (click)="removeCourse(i)" class="btn-danger-sm">Remove</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="add-box">
+      <h4>+ Add New Course Offer</h4>
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label>Course Name *</label>
+          <input type="text" [(ngModel)]="newCourseName" placeholder="e.g. B.Tech Artificial Intelligence" />
+        </div>
+        <div class="form-group">
+          <label>Annual Fee (₹) *</label>
+          <input type="number" [(ngModel)]="newCourseFee" placeholder="e.g. 180000" />
+        </div>
+        <div class="form-group">
+          <label>Duration</label>
+          <input type="text" [(ngModel)]="newCourseDuration" placeholder="4 Years" />
+        </div>
+        <div class="form-group">
+          <label>Eligibility & Cutoff %</label>
+          <input type="number" [(ngModel)]="newCourseCutoff" placeholder="75" />
+        </div>
+      </div>
+      <button (click)="addCourse()" class="btn-primary mt-3">Add Course to Listing</button>
+    </div>
+  </div>
+
+  <!-- TAB 3: Verification Documents -->
+  <div class="tab-content" *ngIf="activeTab === 'documents'">
+    <h3>Uploaded Verification Documents</h3>
+    <p class="subtitle">Upload affiliation certs, NAAC certificates or UGC approval proof for admin moderation.</p>
+
+    <div class="doc-tags" *ngIf="college.documentsForVerification && college.documentsForVerification.length > 0">
+      <div class="doc-badge" *ngFor="let doc of college.documentsForVerification">
+        📄 {{ doc }}
+      </div>
+    </div>
+
+    <div class="add-box mt-3">
+      <h4>Upload / Attach Document Name</h4>
+      <div class="form-group">
+        <input type="text" [(ngModel)]="newDocName" placeholder="e.g. AICTE_Approval_Letter_2025.pdf" />
+      </div>
+      <button (click)="addDocument()" class="btn-primary mt-2">Submit Document</button>
+    </div>
+  </div>
+
+  <!-- TAB 4: Student Leads -->
+  <div class="tab-content" *ngIf="activeTab === 'leads'">
+    <h3>📥 Student Leads & Inquiries</h3>
+    <p class="subtitle">Students who expressed interest or applied directly to your college listing.</p>
+
+    <div *ngIf="leads.length === 0" class="empty-box">
+      <p>No student leads yet. Once students click 'Apply / Lead', their contact info will appear here.</p>
+    </div>
+
+    <table class="data-table" *ngIf="leads.length > 0">
+      <thead>
+        <tr>
+          <th>Applied Date</th>
+          <th>Student Name</th>
+          <th>Phone</th>
+          <th>Class 12 %</th>
+          <th>Stream</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let item of leads">
+          <td>{{ item.appliedAt | date:'short' }}</td>
+          <td><strong>{{ item.studentId?.name || 'Student' }}</strong></td>
+          <td>{{ item.studentId?.phone || 'N/A' }}</td>
+          <td><span class="cutoff-badge">{{ item.studentId?.class12?.percentage || 'N/A' }}%</span></td>
+          <td>{{ item.studentId?.class12?.stream || 'N/A' }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

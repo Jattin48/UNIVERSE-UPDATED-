@@ -1,0 +1,40 @@
+<nav class="navbar">
+  <div class="nav-container">
+    <a routerLink="/" class="brand">
+      <span class="brand-universe">UNIVERSE</span>
+      <span class="brand-tag">College Discovery</span>
+    </a>
+
+    <div class="nav-links">
+      <a routerLink="/colleges" routerLinkActive="active">Explore Colleges</a>
+
+      <ng-container *ngIf="authService.isStudent()">
+        <a routerLink="/student/profile" routerLinkActive="active">My Profile</a>
+        <a routerLink="/student/shortlist" routerLinkActive="active">Shortlisted</a>
+      </ng-container>
+
+      <ng-container *ngIf="authService.isCollege()">
+        <a routerLink="/college/dashboard" routerLinkActive="active">College Dashboard</a>
+      </ng-container>
+
+      <ng-container *ngIf="authService.isAdmin()">
+        <a routerLink="/admin/panel" routerLinkActive="active">Admin Panel</a>
+      </ng-container>
+
+      <ng-container *ngIf="!authService.isLoggedIn(); else userMenu">
+        <a routerLink="/login" class="btn-secondary">Login</a>
+        <a routerLink="/signup" class="btn-primary">Sign Up</a>
+      </ng-container>
+
+      <ng-template #userMenu>
+        <div class="user-badge">
+          <span class="role-chip" [ngClass]="authService.getUserRole() || ''">
+            {{ authService.getUserRole() | uppercase }}
+          </span>
+          <span class="user-email">{{ authService.currentUser()?.email }}</span>
+          <button (click)="onLogout()" class="btn-outline">Logout</button>
+        </div>
+      </ng-template>
+    </div>
+  </div>
+</nav>

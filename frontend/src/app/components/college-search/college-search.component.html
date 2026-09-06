@@ -1,0 +1,232 @@
+<div class="search-page-container">
+  <!-- Hero Search Banner -->
+  <div class="hero-banner">
+    <h1>Find Your Dream College</h1>
+    <p>Discover Top Government, Private & Deemed Universities for 12th Pass Students</p>
+    <div class="search-bar-box">
+      <input
+        type="text"
+        [(ngModel)]="searchQuery"
+        (keyup.enter)="fetchColleges()"
+        placeholder="Search by college name, course (e.g. B.Tech, BBA), or location..."
+      />
+      <button (click)="fetchColleges()" class="btn-hero-search">Search Colleges</button>
+    </div>
+  </div>
+
+  <div class="main-layout">
+    <!-- Sidebar Filters -->
+    <aside class="filter-sidebar">
+      <div class="filter-header">
+        <h3>Filter Colleges</h3>
+        <button (click)="resetFilters()" class="btn-reset">Reset All</button>
+      </div>
+
+      <div class="filter-section">
+        <label>Course / Stream</label>
+        <select [(ngModel)]="course" (change)="fetchColleges()">
+          <option value="">All Courses</option>
+          <option value="B.Tech">B.Tech / B.E.</option>
+          <option value="BBA">BBA</option>
+          <option value="B.Com">B.Com / B.Com (Hons)</option>
+          <option value="B.Sc">B.Sc / B.Sc (Hons)</option>
+          <option value="B.A.">B.A.</option>
+          <option value="BCA">BCA</option>
+        </select>
+      </div>
+
+      <div class="filter-section">
+        <label>College Type</label>
+        <select [(ngModel)]="collegeType" (change)="fetchColleges()">
+          <option value="">All Types</option>
+          <option value="Government">Government</option>
+          <option value="Private">Private</option>
+          <option value="Deemed">Deemed University</option>
+        </select>
+      </div>
+
+      <div class="filter-section">
+        <label>State / Region</label>
+        <select [(ngModel)]="state" (change)="fetchColleges()">
+          <option value="">All States</option>
+          <option value="Delhi">Delhi / NCR</option>
+          <option value="Karnataka">Karnataka</option>
+          <option value="Rajasthan">Rajasthan</option>
+          <option value="Uttar Pradesh">Uttar Pradesh</option>
+          <option value="Maharashtra">Maharashtra</option>
+        </select>
+      </div>
+
+      <div class="filter-section">
+        <label>Annual Fee Range (₹)</label>
+        <div class="range-inputs">
+          <input
+            type="number"
+            [(ngModel)]="budgetMin"
+            placeholder="Min (e.g. 50000)"
+          />
+          <span>to</span>
+          <input
+            type="number"
+            [(ngModel)]="budgetMax"
+            placeholder="Max (e.g. 300000)"
+          />
+        </div>
+      </div>
+
+      <div class="filter-section">
+        <label>Min Rating</label>
+        <select [(ngModel)]="minRating" (change)="fetchColleges()">
+          <option [ngValue]="null">Any Rating</option>
+          <option [ngValue]="4.5">⭐ 4.5 & above</option>
+          <option [ngValue]="4.0">⭐ 4.0 & above</option>
+          <option [ngValue]="3.5">⭐ 3.5 & above</option>
+        </select>
+      </div>
+
+      <button (click)="fetchColleges()" class="btn-apply-filters">Apply Filters</button>
+    </aside>
+
+    <!-- Results Section -->
+    <main class="results-container">
+      <div class="results-header">
+        <div class="results-count">
+          Showing <strong>{{ colleges.length }}</strong> verified colleges
+        </div>
+        <div class="compare-bar" *ngIf="comparedColleges.length > 0">
+          <span>Comparing {{ comparedColleges.length }}/3 colleges</span>
+          <button (click)="openComparison()" class="btn-compare-now">Compare Now</button>
+        </div>
+      </div>
+
+      <div *ngIf="isLoading" class="loading-state">
+        <div class="spinner"></div>
+        <p>Searching colleges...</p>
+      </div>
+
+      <div *ngIf="errorMessage" class="error-state">
+        {{ errorMessage }}
+      </div>
+
+      <div *ngIf="!isLoading && colleges.length === 0" class="empty-state">
+        <h3>No colleges found matching your criteria</h3>
+        <p>Try resetting filters or expanding your budget range.</p>
+        <button (click)="resetFilters()" class="btn-reset">Reset Filters</button>
+      </div>
+
+      <!-- College Grid -->
+      <div class="college-grid" *ngIf="!isLoading">
+        <div class="college-card" *ngFor="let col of colleges">
+          <div class="card-image-box">
+            <img [src]="col.images && col.images.length ? col.images[0] : 'https://images.unsplash.com/photo-1562774053-701939374585?auto=format&fit=crop&w=600&q=80'" [alt]="col.name" />
+            <span class="badge-type" [ngClass]="col.type">{{ col.type }}</span>
+            <span class="badge-rating">★ {{ col.rating || '4.5' }}</span>
+          </div>
+
+          <div class="card-body">
+            <h3 class="college-name">{{ col.name }}</h3>
+            <p class="college-location">📍 {{ col.location.city }}, {{ col.location.state }}</p>
+            <p class="college-affiliation">🏛️ {{ col.affiliation }}</p>
+
+            <div class="courses-preview">
+              <span class="label">Offered Courses:</span>
+              <div class="course-chips">
+                <span class="chip" *ngFor="let course of col.coursesOffered.slice(0, 3)">
+                  {{ course.name }} (₹{{ course.annualFee | number }}/yr)
+                </span>
+                <span class="chip-more" *ngIf="col.coursesOffered.length > 3">
+                  +{{ col.coursesOffered.length - 3 }} more
+                </span>
+              </div>
+            </div>
+
+            <div class="facilities-preview">
+              <span class="facility-tag" *ngFor="let f of col.facilities.slice(0, 4)">
+                ✓ {{ f }}
+              </span>
+            </div>
+          </div>
+
+          <div class="card-footer">
+            <div class="actions">
+              <button
+                (click)="toggleShortlist(col)"
+                class="btn-icon"
+                [class.shortlisted]="isShortlisted(col._id)"
+                title="Shortlist College"
+              >
+                {{ isShortlisted(col._id) ? '❤️ Shortlisted' : '🤍 Shortlist' }}
+              </button>
+
+              <button
+                (click)="toggleCompare(col)"
+                class="btn-icon"
+                [class.compared]="isCompared(col._id)"
+              >
+                {{ isCompared(col._id) ? '✓ Compared' : '+ Compare' }}
+              </button>
+
+              <a [routerLink]="['/colleges', col._id]" class="btn-details">View Details</a>
+              <button (click)="applyNow(col)" class="btn-apply">Apply / Lead</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- College Comparison Modal -->
+<div class="modal-overlay" *ngIf="showComparisonModal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h2>College Comparison</h2>
+      <button (click)="closeComparison()" class="btn-close">&times;</button>
+    </div>
+
+    <div class="comparison-table-wrapper">
+      <table class="comparison-table">
+        <thead>
+          <tr>
+            <th>Feature / Criteria</th>
+            <th *ngFor="let c of comparedColleges">{{ c.name }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Type</strong></td>
+            <td *ngFor="let c of comparedColleges">{{ c.type }}</td>
+          </tr>
+          <tr>
+            <td><strong>Location</strong></td>
+            <td *ngFor="let c of comparedColleges">{{ c.location.city }}, {{ c.location.state }}</td>
+          </tr>
+          <tr>
+            <td><strong>Rating</strong></td>
+            <td *ngFor="let c of comparedColleges">⭐ {{ c.rating }} / 5</td>
+          </tr>
+          <tr>
+            <td><strong>Starting Fee</strong></td>
+            <td *ngFor="let c of comparedColleges">₹{{ getLowestFee(c) | number }}/year</td>
+          </tr>
+          <tr>
+            <td><strong>Courses</strong></td>
+            <td *ngFor="let c of comparedColleges">
+              <ul>
+                <li *ngFor="let crs of c.coursesOffered">
+                  {{ crs.name }} — ₹{{ crs.annualFee | number }}
+                </li>
+              </ul>
+            </td>
+          </tr>
+          <tr>
+            <td><strong>Facilities</strong></td>
+            <td *ngFor="let c of comparedColleges">
+              {{ c.facilities.join(', ') }}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

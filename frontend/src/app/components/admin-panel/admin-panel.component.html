@@ -1,0 +1,107 @@
+<div class="admin-container">
+  <div class="admin-header">
+    <h2>🛡️ Platform Admin Moderation Dashboard</h2>
+    <p>Review self-registered college listings, inspect verification documents, and grant platform approval.</p>
+  </div>
+
+  <div class="admin-tabs">
+    <button [class.active]="activeFilter === 'pending'" (click)="activeFilter = 'pending'">
+      ⏳ Pending Approvals ({{ pendingColleges.length }})
+    </button>
+    <button [class.active]="activeFilter === 'all'" (click)="activeFilter = 'all'">
+      📊 All Platform Colleges ({{ allColleges.length }})
+    </button>
+  </div>
+
+  <div *ngIf="isLoading" class="loading-state">
+    <p>Loading moderation queue...</p>
+  </div>
+
+  <!-- PENDING LISTINGS -->
+  <div class="admin-content" *ngIf="!isLoading && activeFilter === 'pending'">
+    <div *ngIf="pendingColleges.length === 0" class="empty-state">
+      <h3>✓ All pending college applications are reviewed!</h3>
+      <p>There are no colleges waiting for moderation at this time.</p>
+    </div>
+
+    <div class="pending-grid" *ngIf="pendingColleges.length > 0">
+      <div class="college-moderation-card" *ngFor="let col of pendingColleges">
+        <div class="mod-header">
+          <div>
+            <h3>{{ col.name }}</h3>
+            <p class="meta">📍 {{ col.location.city }}, {{ col.location.state }} | {{ col.type }}</p>
+          </div>
+          <span class="status-badge pending">PENDING</span>
+        </div>
+
+        <div class="mod-body">
+          <p><strong>Affiliation:</strong> {{ col.affiliation }}</p>
+          <p><strong>Website:</strong> {{ col.website || 'N/A' }}</p>
+          <p><strong>Courses Offered:</strong> {{ col.coursesOffered.length || 0 }} courses</p>
+
+          <div class="documents-box mt-2">
+            <span class="doc-title">Verification Documents:</span>
+            <div *ngIf="!col.documentsForVerification || col.documentsForVerification.length === 0" class="no-docs">
+              ⚠️ No documents submitted yet
+            </div>
+            <div class="doc-list" *ngIf="col.documentsForVerification && col.documentsForVerification.length > 0">
+              <span class="doc-chip" *ngFor="let doc of col.documentsForVerification">
+                📄 {{ doc }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="mod-footer">
+          <button (click)="updateStatus(col._id, 'rejected')" class="btn-reject">✕ Reject</button>
+          <button (click)="updateStatus(col._id, 'approved')" class="btn-approve">✓ Approve & Publish</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ALL LISTINGS -->
+  <div class="admin-content" *ngIf="!isLoading && activeFilter === 'all'">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>College Name</th>
+          <th>Location</th>
+          <th>Type</th>
+          <th>Status</th>
+          <th>Rating</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let col of allColleges">
+          <td><strong>{{ col.name }}</strong></td>
+          <td>{{ col.location.city }}, {{ col.location.state }}</td>
+          <td>{{ col.type }}</td>
+          <td>
+            <span class="status-chip" [ngClass]="col.registrationStatus">
+              {{ col.registrationStatus }}
+            </span>
+          </td>
+          <td>⭐ {{ col.rating || 4.5 }}</td>
+          <td>
+            <button
+              *ngIf="col.registrationStatus !== 'approved'"
+              (click)="updateStatus(col._id, 'approved')"
+              class="btn-approve-sm"
+            >
+              Approve
+            </button>
+            <button
+              *ngIf="col.registrationStatus !== 'rejected'"
+              (click)="updateStatus(col._id, 'rejected')"
+              class="btn-reject-sm"
+            >
+              Reject
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

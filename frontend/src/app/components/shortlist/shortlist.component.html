@@ -1,0 +1,40 @@
+<div class="shortlist-container">
+  <div class="header-box">
+    <h2>❤️ My Shortlisted Colleges</h2>
+    <p>Compare your saved colleges and submit direct interest applications</p>
+  </div>
+
+  <div *ngIf="isLoading" class="loading-state">
+    <p>Loading shortlist...</p>
+  </div>
+
+  <div *ngIf="!isLoading && shortlistedColleges.length === 0" class="empty-state">
+    <h3>You haven't shortlisted any colleges yet</h3>
+    <p>Explore colleges and click "Shortlist" to save your favorite institutes here.</p>
+    <a routerLink="/colleges" class="btn-primary">Browse Colleges</a>
+  </div>
+
+  <div class="college-grid" *ngIf="!isLoading && shortlistedColleges.length > 0">
+    <div class="college-card" *ngFor="let col of shortlistedColleges">
+      <div class="card-image-box">
+        <img
+          [src]="col.images && col.images.length ? col.images[0] : 'https://images.unsplash.com/photo-1562774053-701939374585?auto=format&fit=crop&w=600&q=80'"
+          [alt]="col.name"
+        />
+        <span class="badge-type" [ngClass]="col.type">{{ col.type }}</span>
+      </div>
+
+      <div class="card-body">
+        <h3>{{ col.name }}</h3>
+        <p class="location">📍 {{ col.location.city }}, {{ col.location.state }}</p>
+        <p class="rating">⭐ {{ col.rating || 4.5 }} / 5.0</p>
+      </div>
+
+      <div class="card-footer">
+        <button (click)="removeShortlist(col._id)" class="btn-remove">Remove</button>
+        <a [routerLink]="['/colleges', col._id]" class="btn-details">Details</a>
+        <button (click)="applyNow(col)" class="btn-apply">Apply Now</button>
+      </div>
+    </div>
+  </div>
+</div>

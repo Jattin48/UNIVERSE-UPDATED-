@@ -1,0 +1,102 @@
+<div class="detail-container" *ngIf="college">
+  <!-- Header Banner -->
+  <div class="detail-header-card">
+    <div class="header-image-box">
+      <img
+        [src]="college.images && college.images.length ? college.images[0] : 'https://images.unsplash.com/photo-1562774053-701939374585?auto=format&fit=crop&w=1200&q=80'"
+        [alt]="college.name"
+      />
+    </div>
+
+    <div class="header-content">
+      <div class="top-row">
+        <span class="badge-status" [ngClass]="college.registrationStatus">
+          ✓ {{ college.registrationStatus | uppercase }}
+        </span>
+        <span class="rating">⭐ {{ college.rating || 4.5 }} / 5.0</span>
+      </div>
+
+      <h1>{{ college.name }}</h1>
+      <p class="meta-location">📍 {{ college.location.city }}, {{ college.location.state }}, {{ college.location.country }}</p>
+      <p class="meta-affiliation">🏛️ {{ college.affiliation }} ({{ college.type }} Institution)</p>
+
+      <div class="header-actions">
+        <button (click)="applyNow()" class="btn-primary-lg">Apply / Express Interest</button>
+        <a [href]="college.website" target="_blank" *ngIf="college.website" class="btn-outline-lg">🌐 Official Website</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Content Section -->
+  <div class="detail-grid">
+    <!-- Main Info Column -->
+    <div class="main-column">
+      <!-- Courses Offered Section -->
+      <section class="info-card">
+        <h2>📚 Courses Offered & Annual Fees</h2>
+        <div class="courses-table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Course Name</th>
+                <th>Duration</th>
+                <th>Cutoff %</th>
+                <th>Seats</th>
+                <th>Annual Fee</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let course of college.coursesOffered">
+                <td><strong>{{ course.name }}</strong></td>
+                <td>{{ course.duration }}</td>
+                <td><span class="cutoff-badge">{{ course.cutoff }}%</span></td>
+                <td>{{ course.seats }}</td>
+                <td><strong>₹{{ course.annualFee | number }}</strong> / yr</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Admission Process Section -->
+      <section class="info-card">
+        <h2>📋 Admission Process</h2>
+        <p>{{ college.admissionProcess || 'Merit-based based on Class 12th percentages or Entrance Examination cutoff scores.' }}</p>
+      </section>
+
+      <!-- Facilities Section -->
+      <section class="info-card">
+        <h2>🏰 Campus Facilities</h2>
+        <div class="facilities-grid">
+          <div class="facility-item" *ngFor="let f of college.facilities">
+            ✓ {{ f }}
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Right Sidebar Column -->
+    <aside class="sidebar-column">
+      <div class="info-card">
+        <h3>📍 Campus Location</h3>
+        <p><strong>City:</strong> {{ college.location.city }}</p>
+        <p><strong>State:</strong> {{ college.location.state }}</p>
+        <p><strong>Coordinates:</strong> {{ college.location.coordinates[1] }}, {{ college.location.coordinates[0] }}</p>
+      </div>
+
+      <div class="info-card">
+        <h3>🛡️ Moderation & Verification</h3>
+        <p>Status: <strong [ngClass]="college.registrationStatus">{{ college.registrationStatus | uppercase }}</strong></p>
+        <div *ngIf="college.documentsForVerification?.length" class="doc-list">
+          <span class="doc-item" *ngFor="let doc of college.documentsForVerification">
+            📄 {{ doc }}
+          </span>
+        </div>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<div *ngIf="isLoading" class="loading-state">
+  <p>Loading college details...</p>
+</div>
