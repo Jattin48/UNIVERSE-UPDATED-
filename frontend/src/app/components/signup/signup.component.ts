@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { UserRole } from '../../models/user.model';
-
+import { Class12Details } from '../../models/student.model'
 @Component({
   selector: 'app-signup',
   standalone: true,

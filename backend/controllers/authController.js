@@ -15,7 +15,6 @@ const generateToken = (id, role) => {
 const signup = async (req, res) => {
   try {
     const { email, password, role, name, phone, collegeName, city, state, collegeType } = req.body;
-
     const userExists = await User.findOne({ email });
     if (userExists) {
       return res.status(400).json({ message: 'User with this email already exists' });
