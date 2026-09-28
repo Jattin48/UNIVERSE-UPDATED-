@@ -144,3 +144,19 @@
   font-weight: 600;
   cursor: pointer;
 }
+
+@media (max-width: 600px) {
+  .shortlist-container {
+    padding: 0 0.75rem;
+    margin: 1rem auto;
+  }
+
+  .college-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .card-footer {
+    grid-template-columns: 1fr;
+  }
+}
+

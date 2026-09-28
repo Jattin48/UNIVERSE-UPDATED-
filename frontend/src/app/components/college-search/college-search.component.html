@@ -15,8 +15,13 @@
   </div>
 
   <div class="main-layout">
+    <!-- Mobile Filter Toggle Button -->
+    <button class="mobile-filter-btn" (click)="toggleMobileFilters()">
+      {{ showMobileFilters ? '✕ Hide Filters' : '⚡ Filter Colleges' }}
+    </button>
+
     <!-- Sidebar Filters -->
-    <aside class="filter-sidebar">
+    <aside class="filter-sidebar" [class.mobile-visible]="showMobileFilters">
       <div class="filter-header">
         <h3>Filter Colleges</h3>
         <button (click)="resetFilters()" class="btn-reset">Reset All</button>

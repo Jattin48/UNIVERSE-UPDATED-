@@ -394,3 +394,107 @@
 .comparison-table th {
   background-color: #f8fafc;
 }
+
+.comparison-table-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.mobile-filter-btn {
+  display: none;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background-color: #4f46e5;
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  margin-bottom: 1rem;
+  box-shadow: 0 2px 4px rgba(79, 70, 229, 0.2);
+}
+
+/* Comprehensive Responsive Layouts */
+@media (max-width: 900px) {
+  .search-page-container {
+    padding: 1rem;
+  }
+
+  .hero-banner {
+    padding: 2rem 1.25rem;
+  }
+
+  .hero-banner h1 {
+    font-size: 1.65rem;
+  }
+
+  .hero-banner p {
+    font-size: 0.95rem;
+  }
+
+  .mobile-filter-btn {
+    display: block;
+  }
+
+  .filter-sidebar {
+    display: none;
+    margin-bottom: 1.5rem;
+  }
+
+  .filter-sidebar.mobile-visible {
+    display: flex;
+  }
+
+  .results-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .search-bar-box {
+    flex-direction: column;
+    background: transparent;
+    box-shadow: none;
+    gap: 0.75rem;
+    padding: 0;
+  }
+
+  .search-bar-box input {
+    width: 100%;
+    border-radius: 0.5rem;
+    padding: 0.85rem 1rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+
+  .btn-hero-search {
+    width: 100%;
+    border-radius: 0.5rem;
+    padding: 0.85rem;
+  }
+
+  .college-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .actions {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .btn-details, .btn-apply {
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .actions {
+    grid-template-columns: 1fr;
+  }
+
+  .modal-card {
+    padding: 1rem;
+  }
+}
+

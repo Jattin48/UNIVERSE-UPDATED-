@@ -174,3 +174,46 @@
   font-size: 0.85rem;
   font-weight: 600;
 }
+
+.table-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 640px) {
+  .dashboard-container {
+    padding: 0 0.75rem;
+    margin: 1rem auto;
+  }
+
+  .dash-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1.25rem 1rem;
+  }
+
+  .status-note {
+    max-width: 100%;
+  }
+
+  .dash-tabs {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .dash-tabs button {
+    white-space: nowrap;
+    padding: 0.6rem 0.85rem;
+    font-size: 0.85rem;
+  }
+
+  .tab-content {
+    padding: 1.25rem 1rem;
+  }
+
+  .form-grid-2 {
+    grid-template-columns: 1fr;
+  }
+}
+

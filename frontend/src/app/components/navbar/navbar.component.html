@@ -5,25 +5,31 @@
       <span class="brand-tag">College Discovery</span>
     </a>
 
-    <div class="nav-links">
-      <a routerLink="/colleges" routerLinkActive="active">Explore Colleges</a>
+    <button class="mobile-menu-toggle" (click)="toggleMobileMenu()" aria-label="Toggle navigation menu">
+      <span class="hamburger-bar" [class.open]="isMobileMenuOpen"></span>
+      <span class="hamburger-bar" [class.open]="isMobileMenuOpen"></span>
+      <span class="hamburger-bar" [class.open]="isMobileMenuOpen"></span>
+    </button>
+
+    <div class="nav-links" [class.open]="isMobileMenuOpen">
+      <a routerLink="/colleges" routerLinkActive="active" (click)="closeMobileMenu()">Explore Colleges</a>
 
       <ng-container *ngIf="authService.isStudent()">
-        <a routerLink="/student/profile" routerLinkActive="active">My Profile</a>
-        <a routerLink="/student/shortlist" routerLinkActive="active">Shortlisted</a>
+        <a routerLink="/student/profile" routerLinkActive="active" (click)="closeMobileMenu()">My Profile</a>
+        <a routerLink="/student/shortlist" routerLinkActive="active" (click)="closeMobileMenu()">Shortlisted</a>
       </ng-container>
 
       <ng-container *ngIf="authService.isCollege()">
-        <a routerLink="/college/dashboard" routerLinkActive="active">College Dashboard</a>
+        <a routerLink="/college/dashboard" routerLinkActive="active" (click)="closeMobileMenu()">College Dashboard</a>
       </ng-container>
 
       <ng-container *ngIf="authService.isAdmin()">
-        <a routerLink="/admin/panel" routerLinkActive="active">Admin Panel</a>
+        <a routerLink="/admin/panel" routerLinkActive="active" (click)="closeMobileMenu()">Admin Panel</a>
       </ng-container>
 
       <ng-container *ngIf="!authService.isLoggedIn(); else userMenu">
-        <a routerLink="/login" class="btn-secondary">Login</a>
-        <a routerLink="/signup" class="btn-primary">Sign Up</a>
+        <a routerLink="/login" class="btn-secondary" (click)="closeMobileMenu()">Login</a>
+        <a routerLink="/signup" class="btn-primary" (click)="closeMobileMenu()">Sign Up</a>
       </ng-container>
 
       <ng-template #userMenu>

@@ -35,6 +35,11 @@ export class CollegeSearchComponent implements OnInit {
   // College comparison list
   comparedColleges: College[] = [];
   showComparisonModal = false;
+  showMobileFilters = false;
+
+  toggleMobileFilters() {
+    this.showMobileFilters = !this.showMobileFilters;
+  }
 
   constructor(
     private collegeService: CollegeService,

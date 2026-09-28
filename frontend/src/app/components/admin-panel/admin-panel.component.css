@@ -206,3 +206,35 @@
   font-size: 0.75rem;
   cursor: pointer;
 }
+
+.table-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 640px) {
+  .admin-container {
+    padding: 0 0.75rem;
+    margin: 1rem auto;
+  }
+
+  .admin-tabs {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .admin-tabs button {
+    white-space: nowrap;
+    padding: 0.6rem 0.85rem;
+    font-size: 0.85rem;
+  }
+
+  .pending-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .mod-footer {
+    grid-template-columns: 1fr;
+  }
+}
+

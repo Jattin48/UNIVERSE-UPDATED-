@@ -136,3 +136,24 @@
   font-weight: 600;
   text-decoration: none;
 }
+
+@media (max-width: 500px) {
+  .auth-card-container {
+    padding: 1rem 0.5rem;
+    min-height: auto;
+  }
+
+  .auth-card {
+    padding: 1.5rem 1.25rem;
+  }
+
+  .form-row {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .role-selector {
+    flex-direction: column;
+  }
+}
+
