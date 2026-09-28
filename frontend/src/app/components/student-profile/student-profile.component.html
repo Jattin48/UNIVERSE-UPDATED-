@@ -1,142 +1,325 @@
-<div class="profile-container" *ngIf="profile">
-  <div class="profile-card">
-    <div class="card-header">
-      <h2>🎓 My Student Profile</h2>
-      <p>Build your academic marks, stream, & college preferences to get personalized suggestions</p>
+<div class="insta-profile-container" *ngIf="profile">
+  <!-- Instagram-Style Profile Header -->
+  <header class="insta-header">
+    <div class="avatar-section">
+      <div class="avatar-ring">
+        <div class="avatar-circle">
+          {{ getInitials(profile.name) }}
+        </div>
+      </div>
+      <span class="role-badge">STUDENT</span>
     </div>
 
-    <div *ngIf="successMessage" class="alert-success">{{ successMessage }}</div>
-    <div *ngIf="errorMessage" class="alert-error">{{ errorMessage }}</div>
+    <div class="header-details">
+      <div class="user-row">
+        <h1 class="username">{{ profile.name }}</h1>
+        <div class="header-actions">
+          <button
+            class="btn-insta-action"
+            [class.active]="activeTab === 'edit'"
+            (click)="setTab('edit')"
+          >
+            ✏️ Edit Profile
+          </button>
+          <button class="btn-insta-action" (click)="copyProfileLink()">
+            {{ copiedLink ? '✓ Copied!' : '🔗 Share' }}
+          </button>
+        </div>
+      </div>
 
-    <form (ngSubmit)="onSave()" class="profile-form">
-      <!-- Personal Details -->
-      <section class="form-section">
+      <!-- Stats Bar (Instagram Style) -->
+      <div class="stats-row">
+        <div class="stat-item">
+          <span class="stat-value">{{ profile.class12.percentage || 0 }}%</span>
+          <span class="stat-label">12th Score</span>
+        </div>
+        <div class="stat-item" (click)="setTab('shortlist')">
+          <span class="stat-value">{{ getShortlistedCount() }}</span>
+          <span class="stat-label">Shortlisted</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-value">{{ profile.class12.yearOfPassing || 2025 }}</span>
+          <span class="stat-label">Passing Year</span>
+        </div>
+      </div>
+
+      <!-- Bio Section -->
+      <div class="bio-section">
+        <div class="bio-headline">
+          🎓 {{ profile.class12.stream || 'Student' }} Stream • {{ profile.class12.board || 'Board' }}
+        </div>
+        <div class="bio-text" *ngIf="coursesInput">
+          🎯 <strong>Targeting:</strong> {{ coursesInput }}
+        </div>
+        <div class="bio-text" *ngIf="locationsInput">
+          📍 <strong>Preferred Cities:</strong> {{ locationsInput }}
+        </div>
+        <div class="bio-meta">
+          ✉️ {{ authService.currentUser()?.email }}
+          <span *ngIf="profile.phone"> • 📞 {{ profile.phone }}</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Navigation Tabs (Instagram Style) -->
+  <nav class="insta-tabs">
+    <button
+      class="tab-btn"
+      [class.active]="activeTab === 'overview'"
+      (click)="setTab('overview')"
+    >
+      <span class="tab-icon">👤</span> OVERVIEW
+    </button>
+    <button
+      class="tab-btn"
+      [class.active]="activeTab === 'edit'"
+      (click)="setTab('edit')"
+    >
+      <span class="tab-icon">⚙️</span> EDIT PROFILE
+    </button>
+    <button
+      class="tab-btn"
+      [class.active]="activeTab === 'shortlist'"
+      (click)="setTab('shortlist')"
+    >
+      <span class="tab-icon">❤️</span> SHORTLISTS ({{ getShortlistedCount() }})
+    </button>
+  </nav>
+
+  <!-- Alerts -->
+  <div *ngIf="successMessage" class="alert-success">✓ {{ successMessage }}</div>
+  <div *ngIf="errorMessage" class="alert-error">⚠️ {{ errorMessage }}</div>
+
+  <!-- Tab 1: Overview -->
+  <div class="tab-content" *ngIf="activeTab === 'overview'">
+    <div class="overview-grid">
+      <!-- Academic Highlights Card -->
+      <div class="content-card">
+        <div class="card-title">
+          <h3>📚 Academic Background</h3>
+        </div>
+        <div class="info-list">
+          <div class="info-row">
+            <span class="label">Board:</span>
+            <span class="val">{{ profile.class12.board || 'Not specified' }}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Stream:</span>
+            <span class="val highlight">{{ profile.class12.stream || 'Not specified' }}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Percentage:</span>
+            <span class="val score">{{ profile.class12.percentage }}%</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Passing Year:</span>
+            <span class="val">{{ profile.class12.yearOfPassing }}</span>
+          </div>
+        </div>
+        <div class="subjects-box" *ngIf="profile.class12.subjects && profile.class12.subjects.length">
+          <span class="box-label">Studied Subjects:</span>
+          <div class="tags-row">
+            <span class="tag" *ngFor="let s of profile.class12.subjects">{{ s }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- College Discovery Preferences Card -->
+      <div class="content-card">
+        <div class="card-title">
+          <h3>🎯 Discovery Preferences</h3>
+        </div>
+        <div class="info-list">
+          <div class="info-row">
+            <span class="label">Target Courses:</span>
+            <span class="val">{{ coursesInput || 'All courses' }}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Target Cities:</span>
+            <span class="val">{{ locationsInput || 'Pan India' }}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Annual Budget:</span>
+            <span class="val">
+              ₹{{ (profile.preferences.budgetMin || 0) | number }} - ₹{{ (profile.preferences.budgetMax || 500000) | number }}/year
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab 2: Edit Profile -->
+  <div class="tab-content" *ngIf="activeTab === 'edit'">
+    <form (ngSubmit)="onSave()" class="edit-form-card">
+      <div class="form-section-header">
         <h3>Basic Information</h3>
-        <div class="form-grid-2">
-          <div class="form-group">
-            <label>Full Name *</label>
-            <input type="text" [(ngModel)]="profile.name" name="name" required />
-          </div>
-          <div class="form-group">
-            <label>Phone Number</label>
-            <input type="tel" [(ngModel)]="profile.phone" name="phone" />
-          </div>
-        </div>
-      </section>
+        <p>Update your display name and contact details</p>
+      </div>
 
-      <!-- Class 12 Marks & Stream -->
-      <section class="form-section">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Full Name *</label>
+          <input type="text" [(ngModel)]="profile.name" name="name" required placeholder="e.g. Rahul Sharma" />
+        </div>
+        <div class="form-group">
+          <label>Phone Number</label>
+          <input type="tel" [(ngModel)]="profile.phone" name="phone" placeholder="e.g. +91 9876543210" />
+        </div>
+      </div>
+
+      <div class="form-section-header mt-4">
         <h3>Class 12th Academic Background</h3>
-        <div class="form-grid-2">
-          <div class="form-group">
-            <label>Board</label>
-            <select [(ngModel)]="profile.class12.board" name="board">
-              <option value="CBSE">CBSE</option>
-              <option value="ICSE">ICSE / ISC</option>
-              <option value="State Board">State Board</option>
-              <option value="IB / Other">IB / Other</option>
-            </select>
-          </div>
+        <p>Update your board marks & stream for accurate eligibility cutoff matching</p>
+      </div>
 
-          <div class="form-group">
-            <label>Stream *</label>
-            <select [(ngModel)]="profile.class12.stream" name="stream">
-              <option value="Science">Science (PCM / PCB)</option>
-              <option value="Commerce">Commerce</option>
-              <option value="Arts">Arts / Humanities</option>
-              <option value="Other">Other</option>
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label>Class 12 Percentage (%) *</label>
-            <input
-              type="number"
-              step="0.1"
-              min="0"
-              max="100"
-              [(ngModel)]="profile.class12.percentage"
-              name="percentage"
-              placeholder="e.g. 92.5"
-            />
-          </div>
-
-          <div class="form-group">
-            <label>Year of Passing</label>
-            <input
-              type="number"
-              [(ngModel)]="profile.class12.yearOfPassing"
-              name="yearOfPassing"
-              placeholder="e.g. 2025"
-            />
-          </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Board</label>
+          <select [(ngModel)]="profile.class12.board" name="board">
+            <option value="CBSE">CBSE</option>
+            <option value="ICSE">ICSE / ISC</option>
+            <option value="State Board">State Board</option>
+            <option value="IB / Other">IB / Other</option>
+          </select>
         </div>
-
-        <div class="form-group mt-3">
-          <label>Subjects Studied (comma-separated)</label>
-          <input
-            type="text"
-            [(ngModel)]="subjectsInput"
-            name="subjectsInput"
-            placeholder="Physics, Chemistry, Mathematics, English, Computer Science"
-          />
-        </div>
-      </section>
-
-      <!-- Preferences -->
-      <section class="form-section">
-        <h3>College Discovery Preferences</h3>
 
         <div class="form-group">
-          <label>Interested Courses (comma-separated)</label>
+          <label>Stream *</label>
+          <select [(ngModel)]="profile.class12.stream" name="stream">
+            <option value="Science">Science (PCM / PCB)</option>
+            <option value="Commerce">Commerce</option>
+            <option value="Arts">Arts / Humanities</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Class 12 Percentage (%) *</label>
           <input
-            type="text"
-            [(ngModel)]="coursesInput"
-            name="coursesInput"
-            placeholder="e.g. B.Tech Computer Science, BBA, B.Com (Hons)"
+            type="number"
+            step="0.1"
+            min="0"
+            max="100"
+            [(ngModel)]="profile.class12.percentage"
+            name="percentage"
+            placeholder="e.g. 92.5"
           />
         </div>
 
-        <div class="form-group mt-3">
-          <label>Preferred Cities / States (comma-separated)</label>
+        <div class="form-group">
+          <label>Year of Passing</label>
           <input
-            type="text"
-            [(ngModel)]="locationsInput"
-            name="locationsInput"
-            placeholder="e.g. Delhi, Bengaluru, Pune, Mumbai"
+            type="number"
+            [(ngModel)]="profile.class12.yearOfPassing"
+            name="yearOfPassing"
+            placeholder="e.g. 2025"
           />
         </div>
+      </div>
 
-        <div class="form-grid-2 mt-3">
-          <div class="form-group">
-            <label>Annual Budget Minimum (₹)</label>
-            <input
-              type="number"
-              [(ngModel)]="profile.preferences.budgetMin"
-              name="budgetMin"
-              placeholder="0"
-            />
-          </div>
-          <div class="form-group">
-            <label>Annual Budget Maximum (₹)</label>
-            <input
-              type="number"
-              [(ngModel)]="profile.preferences.budgetMax"
-              name="budgetMax"
-              placeholder="500000"
-            />
-          </div>
+      <div class="form-group mt-2">
+        <label>Subjects Studied (comma-separated)</label>
+        <input
+          type="text"
+          [(ngModel)]="subjectsInput"
+          name="subjectsInput"
+          placeholder="Physics, Chemistry, Mathematics, English, Computer Science"
+        />
+      </div>
+
+      <div class="form-section-header mt-4">
+        <h3>College Preferences</h3>
+        <p>Set your target courses, locations, and annual budget range</p>
+      </div>
+
+      <div class="form-group">
+        <label>Interested Courses (comma-separated)</label>
+        <input
+          type="text"
+          [(ngModel)]="coursesInput"
+          name="coursesInput"
+          placeholder="e.g. B.Tech Computer Science, BBA, B.Com (Hons)"
+        />
+      </div>
+
+      <div class="form-group mt-2">
+        <label>Preferred Cities / States (comma-separated)</label>
+        <input
+          type="text"
+          [(ngModel)]="locationsInput"
+          name="locationsInput"
+          placeholder="e.g. Delhi, Bengaluru, Pune, Mumbai"
+        />
+      </div>
+
+      <div class="form-row mt-2">
+        <div class="form-group">
+          <label>Annual Budget Min (₹)</label>
+          <input
+            type="number"
+            [(ngModel)]="profile.preferences.budgetMin"
+            name="budgetMin"
+            placeholder="0"
+          />
         </div>
-      </section>
+        <div class="form-group">
+          <label>Annual Budget Max (₹)</label>
+          <input
+            type="number"
+            [(ngModel)]="profile.preferences.budgetMax"
+            name="budgetMax"
+            placeholder="500000"
+          />
+        </div>
+      </div>
 
-      <button type="submit" [disabled]="isSaving" class="btn-save">
-        <span *ngIf="!isSaving">Save Profile Settings</span>
-        <span *ngIf="isSaving">Saving...</span>
-      </button>
+      <div class="form-actions mt-4">
+        <button type="submit" [disabled]="isSaving" class="btn-save-profile">
+          <span *ngIf="!isSaving">✓ Save Profile Changes</span>
+          <span *ngIf="isSaving">Saving Changes...</span>
+        </button>
+      </div>
     </form>
+  </div>
+
+  <!-- Tab 3: Shortlists -->
+  <div class="tab-content" *ngIf="activeTab === 'shortlist'">
+    <div class="shortlists-view">
+      <div *ngIf="getShortlistedCount() === 0" class="empty-shortlist">
+        <span class="icon">💔</span>
+        <h3>No Shortlisted Colleges Yet</h3>
+        <p>Browse colleges and tap the shortlist icon to save your top picks here.</p>
+        <a routerLink="/colleges" class="btn-explore">Explore Colleges</a>
+      </div>
+
+      <div class="shortlist-grid" *ngIf="getShortlistedCount() > 0">
+        <div class="saved-college-card" *ngFor="let item of shortlistedList">
+          <ng-container *ngIf="isCollegeObject(item); else stringItem">
+            <div class="card-header-badge">
+              <span class="badge">{{ item.type || 'College' }}</span>
+              <span class="rating">⭐ {{ item.rating || 4.5 }}</span>
+            </div>
+            <h4>{{ item.name }}</h4>
+            <p class="location" *ngIf="item.location">📍 {{ item.location.city }}, {{ item.location.state }}</p>
+            <a [routerLink]="['/colleges', item._id]" class="btn-view">View Details</a>
+          </ng-container>
+          <ng-template #stringItem>
+            <div class="saved-id-card">
+              <h4>Saved College ID: {{ item }}</h4>
+              <a [routerLink]="['/colleges', item]" class="btn-view">View College</a>
+            </div>
+          </ng-template>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
 <div *ngIf="isLoading" class="loading-state">
-  <p>Loading profile...</p>
+  <div class="spinner"></div>
+  <p>Loading your profile...</p>
 </div>

@@ -1,13 +1,15 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { StudentService } from '../../services/student.service';
 import { StudentProfile } from '../../models/student.model';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-student-profile',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './student-profile.component.html',
   styleUrls: ['./student-profile.component.css'],
 })
@@ -17,13 +19,18 @@ export class StudentProfileComponent implements OnInit {
   isSaving = false;
   successMessage = '';
   errorMessage = '';
+  activeTab: 'overview' | 'edit' | 'shortlist' = 'overview';
+  copiedLink = false;
 
   // Form helpers
   coursesInput = '';
   locationsInput = '';
   subjectsInput = '';
 
-  constructor(private studentService: StudentService) {}
+  constructor(
+    private studentService: StudentService,
+    public authService: AuthService
+  ) {}
 
   ngOnInit(): void {
     this.loadProfile();
@@ -44,11 +51,46 @@ export class StudentProfileComponent implements OnInit {
           this.subjectsInput = res.class12.subjects.join(', ');
         }
       },
-      error: (err) => {
+      error: () => {
         this.isLoading = false;
         this.errorMessage = 'Failed to load profile details.';
       },
     });
+  }
+
+  setTab(tab: 'overview' | 'edit' | 'shortlist') {
+    this.activeTab = tab;
+    this.successMessage = '';
+    this.errorMessage = '';
+  }
+
+  getInitials(name?: string): string {
+    if (!name) return 'ST';
+    const parts = name.trim().split(' ');
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+    return parts[0].substring(0, 2).toUpperCase();
+  }
+
+  get shortlistedList(): any[] {
+    return (this.profile?.shortlistedColleges as any[]) || [];
+  }
+
+  getShortlistedCount(): number {
+    return this.shortlistedList.length;
+  }
+
+  isCollegeObject(item: any): boolean {
+    return typeof item === 'object' && item !== null && 'name' in item;
+  }
+
+  copyProfileLink() {
+    navigator.clipboard.writeText(window.location.href);
+    this.copiedLink = true;
+    setTimeout(() => {
+      this.copiedLink = false;
+    }, 2500);
   }
 
   onSave() {
