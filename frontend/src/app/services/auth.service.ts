@@ -21,25 +21,45 @@ export class AuthService {
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        this.currentUser.set(parsed);
+        if (parsed && parsed.token) {
+          this.currentUser.set(parsed);
+        }
       } catch (e) {
         localStorage.removeItem('universe_auth');
       }
     }
   }
 
-  signup(data: any): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.apiUrl}/signup`, data).pipe(
+  signup(data: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/signup`, data).pipe(
       tap((res) => {
-        this.saveAuth(res);
+        if (res && res.token) {
+          this.saveAuth(res);
+        }
       })
     );
   }
 
-  login(data: any): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.apiUrl}/login`, data).pipe(
+  verifyOtp(email: string, otp: string): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${this.apiUrl}/verify-otp`, { email, otp }).pipe(
       tap((res) => {
-        this.saveAuth(res);
+        if (res && res.token) {
+          this.saveAuth(res);
+        }
+      })
+    );
+  }
+
+  resendOtp(email: string): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.apiUrl}/resend-otp`, { email });
+  }
+
+  login(data: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/login`, data).pipe(
+      tap((res) => {
+        if (res && res.token) {
+          this.saveAuth(res);
+        }
       })
     );
   }

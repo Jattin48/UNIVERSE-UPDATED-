@@ -1,125 +1,188 @@
 <div class="auth-card-container">
   <div class="auth-card">
-    <div class="auth-header">
-      <h2>Create your UNIVERSE Account</h2>
-      <p>Select your account type to get started</p>
-    </div>
-
-    <!-- Role Selector Tabs -->
-    <div class="role-selector">
-      <button
-        type="button"
-        class="role-tab"
-        [class.active]="role === 'student'"
-        (click)="selectRole('student')"
-      >
-        🎓 Student Account
-      </button>
-      <button
-        type="button"
-        class="role-tab"
-        [class.active]="role === 'college'"
-        (click)="selectRole('college')"
-      >
-        🏛️ College / Institution
-      </button>
-    </div>
-
-    <div *ngIf="errorMessage" class="alert-error">
-      {{ errorMessage }}
-    </div>
-
-    <form (ngSubmit)="onSubmit()" class="auth-form">
-      <!-- Common Fields -->
-      <div class="form-group">
-        <label for="email">Email Address *</label>
-        <input
-          type="email"
-          id="email"
-          [(ngModel)]="email"
-          name="email"
-          placeholder="your.email@domain.com"
-          required
-        />
+    <!-- Registration Screen -->
+    <ng-container *ngIf="!isVerifyingOtp; else otpScreen">
+      <div class="auth-header">
+        <h2>Create your UNIVERSE Account</h2>
+        <p>Select your account type to get started</p>
       </div>
 
-      <div class="form-group">
-        <label for="password">Password (min 6 chars) *</label>
-        <input
-          type="password"
-          id="password"
-          [(ngModel)]="password"
-          name="password"
-          placeholder="••••••••"
-          required
-        />
+      <!-- Role Selector Tabs -->
+      <div class="role-selector">
+        <button
+          type="button"
+          class="role-tab"
+          [class.active]="role === 'student'"
+          (click)="selectRole('student')"
+        >
+          🎓 Student Account
+        </button>
+        <button
+          type="button"
+          class="role-tab"
+          [class.active]="role === 'college'"
+          (click)="selectRole('college')"
+        >
+          🏛️ College / Institution
+        </button>
       </div>
 
-      <!-- Student Specific Fields -->
-      <ng-container *ngIf="role === 'student'">
-        <div class="form-group">
-          <label for="name">Full Name</label>
-          <input
-            type="text"
-            id="name"
-            [(ngModel)]="name"
-            name="name"
-            placeholder="e.g. Ananya Roy"
-          />
-        </div>
-        <div class="form-group">
-          <label for="phone">Phone Number</label>
-          <input
-            type="tel"
-            id="phone"
-            [(ngModel)]="phone"
-            name="phone"
-            placeholder="e.g. 9876543210"
-          />
-        </div>
-      </ng-container>
+      <div *ngIf="errorMessage" class="alert-error">
+        {{ errorMessage }}
+      </div>
 
-      <!-- College Specific Fields -->
-      <ng-container *ngIf="role === 'college'">
+      <form (ngSubmit)="onSubmit()" class="auth-form">
+        <!-- Common Fields -->
         <div class="form-group">
-          <label for="collegeName">College / Institute Name *</label>
+          <label for="email">Email Address *</label>
           <input
-            type="text"
-            id="collegeName"
-            [(ngModel)]="collegeName"
-            name="collegeName"
-            placeholder="e.g. Apex Institute of Engineering"
+            type="email"
+            id="email"
+            [(ngModel)]="email"
+            name="email"
+            placeholder="your.email@domain.com"
             required
           />
         </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label for="city">City</label>
-            <input type="text" id="city" [(ngModel)]="city" name="city" placeholder="e.g. Noida" />
-          </div>
-          <div class="form-group">
-            <label for="state">State</label>
-            <input type="text" id="state" [(ngModel)]="state" name="state" placeholder="e.g. Uttar Pradesh" />
-          </div>
-        </div>
+
         <div class="form-group">
-          <label for="collegeType">Institution Type</label>
-          <select id="collegeType" [(ngModel)]="collegeType" name="collegeType">
-            <option value="Private">Private</option>
-            <option value="Government">Government</option>
-            <option value="Deemed">Deemed University</option>
-          </select>
+          <label for="password">Password (min 6 chars) *</label>
+          <input
+            type="password"
+            id="password"
+            [(ngModel)]="password"
+            name="password"
+            placeholder="••••••••"
+            required
+          />
         </div>
-      </ng-container>
 
-      <button type="submit" [disabled]="isLoading" class="btn-submit">
-        <span *ngIf="!isLoading">Register as {{ role | uppercase }}</span>
-        <span *ngIf="isLoading">Creating account...</span>
-      </button>
-    </form>
+        <!-- Student Specific Fields -->
+        <ng-container *ngIf="role === 'student'">
+          <div class="form-group">
+            <label for="name">Full Name</label>
+            <input
+              type="text"
+              id="name"
+              [(ngModel)]="name"
+              name="name"
+              placeholder="e.g. Ananya Roy"
+            />
+          </div>
+          <div class="form-group">
+            <label for="phone">Phone Number</label>
+            <input
+              type="tel"
+              id="phone"
+              [(ngModel)]="phone"
+              name="phone"
+              placeholder="e.g. 9876543210"
+            />
+          </div>
+        </ng-container>
 
-    <div class="auth-footer">
-      <p>Already have an account? <a routerLink="/login">Log in here</a></p>
-    </div>
+        <!-- College Specific Fields -->
+        <ng-container *ngIf="role === 'college'">
+          <div class="form-group">
+            <label for="collegeName">College / Institute Name *</label>
+            <input
+              type="text"
+              id="collegeName"
+              [(ngModel)]="collegeName"
+              name="collegeName"
+              placeholder="e.g. Apex Institute of Engineering"
+              required
+            />
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="city">City</label>
+              <input type="text" id="city" [(ngModel)]="city" name="city" placeholder="e.g. Noida" />
+            </div>
+            <div class="form-group">
+              <label for="state">State</label>
+              <input type="text" id="state" [(ngModel)]="state" name="state" placeholder="e.g. Uttar Pradesh" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="collegeType">Institution Type</label>
+            <select id="collegeType" [(ngModel)]="collegeType" name="collegeType">
+              <option value="Private">Private</option>
+              <option value="Government">Government</option>
+              <option value="Deemed">Deemed University</option>
+            </select>
+          </div>
+        </ng-container>
+
+        <button type="submit" [disabled]="isLoading" class="btn-submit">
+          <span *ngIf="!isLoading">Register as {{ role | uppercase }}</span>
+          <span *ngIf="isLoading">Creating account...</span>
+        </button>
+      </form>
+
+      <div class="auth-footer">
+        <p>Already have an account? <a routerLink="/login">Log in here</a></p>
+      </div>
+    </ng-container>
+
+    <!-- OTP Verification Screen -->
+    <ng-template #otpScreen>
+      <div class="otp-header">
+        <div class="otp-icon">✉️</div>
+        <h2>Verify your Email</h2>
+        <p>We've sent a 6-digit verification code to<br /><strong>{{ email }}</strong></p>
+      </div>
+
+      <div *ngIf="successMessage" class="alert-success">
+        ✓ {{ successMessage }}
+      </div>
+
+      <div *ngIf="errorMessage" class="alert-error">
+        {{ errorMessage }}
+      </div>
+
+      <form (ngSubmit)="onVerifyOtp()" class="otp-form">
+        <div class="form-group">
+          <label for="otpCode">Enter 6-Digit OTP Code</label>
+          <input
+            type="text"
+            id="otpCode"
+            [(ngModel)]="otp"
+            name="otp"
+            placeholder="123456"
+            maxlength="6"
+            pattern="[0-9]{6}"
+            class="otp-input"
+            autocomplete="one-time-code"
+            required
+            autofocus
+          />
+        </div>
+
+        <button type="submit" [disabled]="isLoading || otp.length !== 6" class="btn-submit btn-verify">
+          <span *ngIf="!isLoading">Verify & Activate Account</span>
+          <span *ngIf="isLoading">Verifying OTP...</span>
+        </button>
+      </form>
+
+      <div class="otp-footer">
+        <p *ngIf="resendCooldown > 0" class="cooldown-text">
+          Resend code in <strong>{{ resendCooldown }}s</strong>
+        </p>
+        <button
+          *ngIf="resendCooldown === 0"
+          type="button"
+          (click)="onResendOtp()"
+          [disabled]="isLoading"
+          class="btn-resend"
+        >
+          🔄 Resend OTP Code
+        </button>
+
+        <button type="button" (click)="backToSignup()" class="btn-back">
+          ← Change Email Address
+        </button>
+      </div>
+    </ng-template>
   </div>
 </div>
