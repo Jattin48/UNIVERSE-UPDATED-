@@ -5,6 +5,15 @@ if (dns.setDefaultResultOrder) {
   dns.setDefaultResultOrder('ipv4first');
 }
 
+// Custom DNS lookup that strictly forces IPv4 resolution on cloud environments like Render
+const customIpv4Lookup = (hostname, options, callback) => {
+  if (typeof options === 'function') {
+    callback = options;
+    options = {};
+  }
+  return dns.lookup(hostname, { ...options, family: 4 }, callback);
+};
+
 const sendEmail = async ({ to, subject, html, text }) => {
   try {
     const user = process.env.EMAIL_USER;
@@ -22,41 +31,23 @@ const sendEmail = async ({ to, subject, html, text }) => {
       return { simulated: true };
     }
 
-    // Force IPv4 (family: 4) to prevent ENETUNREACH IPv6 routing errors on Render
-    let transportConfig;
-
-    if (host.includes('gmail') || (user && user.toLowerCase().endsWith('@gmail.com'))) {
-      transportConfig = {
-        service: 'gmail',
-        auth: {
-          user,
-          pass,
-        },
-        family: 4, // Force IPv4 resolution
-        connectionTimeout: 15000,
-        greetingTimeout: 15000,
-        socketTimeout: 20000,
-      };
-    } else {
-      transportConfig = {
-        host,
-        port,
-        secure: port === 465,
-        auth: {
-          user,
-          pass,
-        },
-        family: 4, // Force IPv4 resolution
-        connectionTimeout: 15000,
-        greetingTimeout: 15000,
-        socketTimeout: 20000,
-        tls: {
-          rejectUnauthorized: false,
-        },
-      };
-    }
-
-    const transporter = nodemailer.createTransport(transportConfig);
+    // Configure transport explicitly with custom IPv4 lookup to prevent ENETUNREACH IPv6 errors
+    const transporter = nodemailer.createTransport({
+      host: host.includes('gmail') ? 'smtp.gmail.com' : host,
+      port: 465,
+      secure: true, // SSL
+      auth: {
+        user,
+        pass,
+      },
+      lookup: customIpv4Lookup, // Strictly force IPv4 IP address resolution
+      connectionTimeout: 15000,
+      greetingTimeout: 15000,
+      socketTimeout: 20000,
+      tls: {
+        rejectUnauthorized: false,
+      },
+    });
 
     const info = await transporter.sendMail({
       from: `"UNIVERSE College Discovery" <${user}>`,
