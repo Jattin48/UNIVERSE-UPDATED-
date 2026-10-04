@@ -107,11 +107,12 @@ const sendEmail = async ({ to, subject, html, text }) => {
         pass,
       },
       lookup: customIpv4Lookup,
-      connectionTimeout: 5000,
-      greetingTimeout: 5000,
-      socketTimeout: 8000,
+      connectionTimeout: 2000,
+      greetingTimeout: 2000,
+      socketTimeout: 3000,
       tls: {
         rejectUnauthorized: false,
+        servername: 'smtp.gmail.com',
       },
     });
 
@@ -126,10 +127,10 @@ const sendEmail = async ({ to, subject, html, text }) => {
     console.log(`[EMAIL SENT VIA SMTP] MessageId: ${info.messageId} to ${to}`);
     return info;
   } catch (error) {
-    console.error('====================================================');
-    console.error(`[RENDER SMTP FIREWALL BLOCK DETECTED]: ${error.message}`);
-    console.error(`[OTP CODE FOR VERIFICATION (${to})]: ${extractedOtp || 'Check User record'}`);
-    console.error('====================================================');
+    console.log('\n====================================================');
+    console.log(`[RENDER SMTP FIREWALL BLOCK DETECTED]: ${error.message}`);
+    console.log(`[OTP CODE FOR VERIFICATION (${to})]: ${extractedOtp || 'Check User record'}`);
+    console.log('====================================================\n');
     return { error: error.message, simulated: true, otp: extractedOtp };
   }
 };
