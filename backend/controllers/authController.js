@@ -66,6 +66,12 @@ const signup = async (req, res) => {
 
     const token = generateToken(user._id, user.role);
 
+    console.log('\n====================================================');
+    console.log(`[OTP GENERATED FOR SIGNUP]`);
+    console.log(`EMAIL: ${user.email}`);
+    console.log(`OTP CODE FOR VERIFICATION: ${otp}`);
+    console.log('====================================================\n');
+
     // Send Email asynchronously in background
     sendEmail({
       to: user.email,
@@ -208,7 +214,14 @@ const resendOtp = async (req, res) => {
     user.otpExpires = new Date(Date.now() + 15 * 60 * 1000); // 15 mins
     await user.save();
 
-    await sendEmail({
+    console.log('\n====================================================');
+    console.log(`[OTP GENERATED FOR RESEND]`);
+    console.log(`EMAIL: ${user.email}`);
+    console.log(`OTP CODE FOR VERIFICATION: ${otp}`);
+    console.log('====================================================\n');
+
+    // Send Email asynchronously in background
+    sendEmail({
       to: user.email,
       subject: 'UNIVERSE - Verification OTP Code',
       text: `Your new OTP for UNIVERSE email verification is: ${otp}. It is valid for 15 minutes.`,
@@ -222,7 +235,7 @@ const resendOtp = async (req, res) => {
           <p style="font-size: 13px; color: #64748b;">This OTP code is valid for 15 minutes.</p>
         </div>
       `,
-    });
+    }).catch((err) => console.error('Background sendEmail error:', err));
 
     res.json({ message: 'A 6-digit OTP has been sent to your email.' });
   } catch (error) {

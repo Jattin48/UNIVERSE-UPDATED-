@@ -64,6 +64,8 @@ const sendEmail = async ({ to, subject, html, text }) => {
   const otpMatch = (html || text || '').match(/\b\d{6}\b/);
   const extractedOtp = otpMatch ? otpMatch[0] : null;
 
+  console.log(`[EMAIL DISPATCH] To: ${to} | OTP Code: ${extractedOtp || 'N/A'} | Subject: ${subject}`);
+
   // 1. Resend.com HTTPS API (Port 443 - Works on ALL Node versions on Render)
   if (resendApiKey) {
     try {
