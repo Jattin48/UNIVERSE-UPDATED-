@@ -1,4 +1,5 @@
 const nodemailer = require('nodemailer');
+const https = require('https');
 const dns = require('dns');
 
 if (dns.setDefaultResultOrder) {
@@ -13,6 +14,45 @@ const customIpv4Lookup = (hostname, options, callback) => {
   return dns.lookup(hostname, { ...options, family: 4 }, callback);
 };
 
+// Native HTTPS POST request for Resend API (Works on ALL Node versions 14/16/18/20/22)
+const sendViaResendHttps = (apiKey, payload) => {
+  return new Promise((resolve, reject) => {
+    const data = JSON.stringify(payload);
+    const options = {
+      hostname: 'api.resend.com',
+      port: 443,
+      path: '/emails',
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(data),
+        Authorization: `Bearer ${apiKey}`,
+      },
+    };
+
+    const req = https.request(options, (res) => {
+      let body = '';
+      res.on('data', (chunk) => (body += chunk));
+      res.on('end', () => {
+        try {
+          const parsed = JSON.parse(body);
+          if (res.statusCode >= 200 && res.statusCode < 300) {
+            resolve(parsed);
+          } else {
+            reject(new Error(parsed.message || JSON.stringify(parsed)));
+          }
+        } catch (e) {
+          reject(e);
+        }
+      });
+    });
+
+    req.on('error', (e) => reject(e));
+    req.write(data);
+    req.end();
+  });
+};
+
 const sendEmail = async ({ to, subject, html, text }) => {
   const user = process.env.EMAIL_USER;
   const pass = process.env.EMAIL_PASS;
@@ -24,33 +64,22 @@ const sendEmail = async ({ to, subject, html, text }) => {
   const otpMatch = (html || text || '').match(/\b\d{6}\b/);
   const extractedOtp = otpMatch ? otpMatch[0] : null;
 
-  // 1. Resend.com HTTPS API (Port 443 - Never blocked on Render)
+  // 1. Resend.com HTTPS API (Port 443 - Works on ALL Node versions on Render)
   if (resendApiKey) {
     try {
-      const response = await fetch('https://api.resend.com/emails', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${resendApiKey}`,
-        },
-        body: JSON.stringify({
-          from: 'UNIVERSE <onboarding@resend.dev>',
-          to: [to],
-          subject,
-          html,
-          text,
-        }),
-      });
+      const payload = {
+        from: 'UNIVERSE <onboarding@resend.dev>',
+        to: [to],
+        subject,
+        html,
+        text,
+      };
 
-      const data = await response.json();
-      if (response.ok) {
-        console.log(`[RESEND HTTPS EMAIL SENT] ID: ${data.id} to ${to}`);
-        return data;
-      } else {
-        console.error('[RESEND API ERROR]:', data);
-      }
+      const result = await sendViaResendHttps(resendApiKey, payload);
+      console.log(`[RESEND HTTPS EMAIL SENT] ID: ${result.id} to ${to}`);
+      return result;
     } catch (err) {
-      console.error('[RESEND FETCH ERROR]:', err.message);
+      console.error('[RESEND API ERROR]:', err.message);
     }
   }
 
@@ -59,7 +88,7 @@ const sendEmail = async ({ to, subject, html, text }) => {
     console.log('====================================================');
     console.log(`[DEV EMAIL SIMULATION]`);
     console.log(`TO: ${to}`);
-    console.log(`OTP CODE: ${extractedOtp || 'N/A'}`);
+    console.log(`OTP CODE FOR VERIFICATION: ${extractedOtp || 'N/A'}`);
     console.log(`SUBJECT: ${subject}`);
     console.log('====================================================');
     return { simulated: true, otp: extractedOtp };
@@ -76,7 +105,7 @@ const sendEmail = async ({ to, subject, html, text }) => {
         pass,
       },
       lookup: customIpv4Lookup,
-      connectionTimeout: 5000, // 5 seconds fast timeout for cloud firewalls
+      connectionTimeout: 5000,
       greetingTimeout: 5000,
       socketTimeout: 8000,
       tls: {
@@ -97,7 +126,7 @@ const sendEmail = async ({ to, subject, html, text }) => {
   } catch (error) {
     console.error('====================================================');
     console.error(`[RENDER SMTP FIREWALL BLOCK DETECTED]: ${error.message}`);
-    console.error(`[OTP LOG FOR ${to}]: ${extractedOtp || 'Check User record'}`);
+    console.error(`[OTP CODE FOR VERIFICATION (${to})]: ${extractedOtp || 'Check User record'}`);
     console.error('====================================================');
     return { error: error.message, simulated: true, otp: extractedOtp };
   }
