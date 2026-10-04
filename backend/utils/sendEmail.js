@@ -1,4 +1,9 @@
 const nodemailer = require('nodemailer');
+const dns = require('dns');
+
+if (dns.setDefaultResultOrder) {
+  dns.setDefaultResultOrder('ipv4first');
+}
 
 const sendEmail = async ({ to, subject, html, text }) => {
   try {
@@ -17,7 +22,7 @@ const sendEmail = async ({ to, subject, html, text }) => {
       return { simulated: true };
     }
 
-    // Configure Transport for cloud environments (Render, etc.)
+    // Force IPv4 (family: 4) to prevent ENETUNREACH IPv6 routing errors on Render
     let transportConfig;
 
     if (host.includes('gmail') || (user && user.toLowerCase().endsWith('@gmail.com'))) {
@@ -27,9 +32,10 @@ const sendEmail = async ({ to, subject, html, text }) => {
           user,
           pass,
         },
-        connectionTimeout: 10000, // 10s connection timeout
-        greetingTimeout: 10000,
-        socketTimeout: 15000,
+        family: 4, // Force IPv4 resolution
+        connectionTimeout: 15000,
+        greetingTimeout: 15000,
+        socketTimeout: 20000,
       };
     } else {
       transportConfig = {
@@ -40,9 +46,10 @@ const sendEmail = async ({ to, subject, html, text }) => {
           user,
           pass,
         },
-        connectionTimeout: 10000,
-        greetingTimeout: 10000,
-        socketTimeout: 15000,
+        family: 4, // Force IPv4 resolution
+        connectionTimeout: 15000,
+        greetingTimeout: 15000,
+        socketTimeout: 20000,
         tls: {
           rejectUnauthorized: false,
         },

@@ -1,8 +1,14 @@
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
+const dns = require('dns');
 const rateLimit = require('express-rate-limit');
 const connectDB = require('./config/db.js');
+
+// Force IPv4 first DNS lookup order to prevent ENETUNREACH IPv6 errors on cloud hosts like Render
+if (dns.setDefaultResultOrder) {
+  dns.setDefaultResultOrder('ipv4first');
+}
 
 dotenv.config();
 
