@@ -12,5 +12,6 @@ export interface AuthResponse {
   email: string;
   role: UserRole;
   token: string;
+  isVerified?: boolean;
   profile?: any;
 }

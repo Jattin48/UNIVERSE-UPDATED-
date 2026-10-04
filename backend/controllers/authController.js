@@ -14,7 +14,7 @@ const generate6DigitOtp = () => {
   return Math.floor(100000 + Math.random() * 900000).toString();
 };
 
-// @desc    Register new user & send OTP
+// @desc    Register new user & return instant token (optional email verification)
 // @route   POST /api/auth/signup
 // @access  Public
 const signup = async (req, res) => {
@@ -23,42 +23,12 @@ const signup = async (req, res) => {
     const existingUser = await User.findOne({ email: email.toLowerCase() });
 
     if (existingUser) {
-      if (!existingUser.isVerified) {
-        // If user registered previously but did not verify OTP, generate a new OTP
-        const otp = generate6DigitOtp();
-        existingUser.otp = otp;
-        existingUser.otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 mins
-        await existingUser.save();
-
-        await sendEmail({
-          to: existingUser.email,
-          subject: 'UNIVERSE - Verify Your Email Address (OTP)',
-          text: `Your OTP for UNIVERSE email verification is: ${otp}. It is valid for 10 minutes.`,
-          html: `
-            <div style="font-family: Arial, sans-serif; max-width: 500px; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
-              <h2 style="color: #4f46e5; margin-bottom: 8px;">UNIVERSE College Discovery</h2>
-              <p>Thank you for signing up! Use the 6-digit OTP below to verify your email address:</p>
-              <div style="background-color: #f1f5f9; padding: 15px; text-align: center; border-radius: 6px; margin: 20px 0;">
-                <span style="font-size: 28px; font-weight: bold; letter-spacing: 6px; color: #4f46e5;">${otp}</span>
-              </div>
-              <p style="font-size: 13px; color: #64748b;">This OTP code is valid for 10 minutes. Do not share it with anyone.</p>
-            </div>
-          `,
-        });
-
-        return res.status(200).json({
-          requiresVerification: true,
-          email: existingUser.email,
-          message: 'Account exists but is unverified. A new OTP has been sent to your email.',
-        });
-      }
-
       return res.status(400).json({ message: 'User with this email already exists' });
     }
 
     const assignedRole = ['student', 'college', 'admin'].includes(role) ? role : 'student';
     const otp = generate6DigitOtp();
-    const otpExpires = new Date(Date.now() + 10 * 60 * 1000);
+    const otpExpires = new Date(Date.now() + 15 * 60 * 1000); // 15 mins
 
     const user = await User.create({
       email: email.toLowerCase(),
@@ -94,27 +64,33 @@ const signup = async (req, res) => {
       });
     }
 
-    // Send Email
-    await sendEmail({
+    const token = generateToken(user._id, user.role);
+
+    // Send Email asynchronously in background
+    sendEmail({
       to: user.email,
       subject: 'UNIVERSE - Verify Your Email Address (OTP)',
-      text: `Your OTP for UNIVERSE email verification is: ${otp}. It is valid for 10 minutes.`,
+      text: `Your OTP for UNIVERSE email verification is: ${otp}. It is valid for 15 minutes.`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 500px; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
           <h2 style="color: #4f46e5; margin-bottom: 8px;">UNIVERSE College Discovery</h2>
-          <p>Thank you for signing up! Use the 6-digit OTP below to verify your email address:</p>
+          <p>Welcome to UNIVERSE! You can verify your email anytime using the 6-digit OTP code below:</p>
           <div style="background-color: #f1f5f9; padding: 15px; text-align: center; border-radius: 6px; margin: 20px 0;">
             <span style="font-size: 28px; font-weight: bold; letter-spacing: 6px; color: #4f46e5;">${otp}</span>
           </div>
-          <p style="font-size: 13px; color: #64748b;">This OTP code is valid for 10 minutes. Do not share it with anyone.</p>
+          <p style="font-size: 13px; color: #64748b;">This OTP code is valid for 15 minutes.</p>
         </div>
       `,
-    });
+    }).catch((err) => console.error('Background sendEmail error:', err));
 
     res.status(201).json({
-      requiresVerification: true,
+      _id: user._id,
       email: user.email,
-      message: 'Account created! Please enter the 6-digit OTP sent to your email to verify.',
+      role: user.role,
+      isVerified: false,
+      token,
+      profile: linkedProfile,
+      message: 'Signup successful! Welcome to UNIVERSE.',
     });
   } catch (error) {
     console.error('Signup error:', error);
@@ -122,7 +98,42 @@ const signup = async (req, res) => {
   }
 };
 
-// @desc    Verify 6-digit OTP
+// @desc    Authenticate user & get token (instant access regardless of verification status)
+// @route   POST /api/auth/login
+// @access  Public
+const login = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    const user = await User.findOne({ email: email.toLowerCase() });
+    if (!user || !(await user.matchPassword(password))) {
+      return res.status(401).json({ message: 'Invalid email or password' });
+    }
+
+    let profile = null;
+    if (user.role === 'student') {
+      profile = await StudentProfile.findOne({ userId: user._id });
+    } else if (user.role === 'college') {
+      profile = await College.findOne({ userId: user._id });
+    }
+
+    const token = generateToken(user._id, user.role);
+
+    res.json({
+      _id: user._id,
+      email: user.email,
+      role: user.role,
+      isVerified: user.isVerified,
+      token,
+      profile,
+    });
+  } catch (error) {
+    console.error('Login error:', error);
+    res.status(500).json({ message: error.message || 'Server error during login' });
+  }
+};
+
+// @desc    Verify 6-digit OTP anytime
 // @route   POST /api/auth/verify-otp
 // @access  Public
 const verifyOtp = async (req, res) => {
@@ -139,25 +150,14 @@ const verifyOtp = async (req, res) => {
     }
 
     if (user.isVerified) {
-      const token = generateToken(user._id, user.role);
-      let profile = null;
-      if (user.role === 'student') {
-        profile = await StudentProfile.findOne({ userId: user._id });
-      } else if (user.role === 'college') {
-        profile = await College.findOne({ userId: user._id });
-      }
       return res.json({
-        _id: user._id,
-        email: user.email,
-        role: user.role,
-        token,
-        profile,
-        message: 'Account is already verified.',
+        isVerified: true,
+        message: 'Your email is already verified.',
       });
     }
 
     if (!user.otp || !user.otpExpires) {
-      return res.status(400).json({ message: 'No active OTP found. Please request a new OTP.' });
+      return res.status(400).json({ message: 'No active OTP found. Please click Resend OTP.' });
     }
 
     if (new Date() > new Date(user.otpExpires)) {
@@ -174,21 +174,8 @@ const verifyOtp = async (req, res) => {
     user.otpExpires = undefined;
     await user.save();
 
-    let profile = null;
-    if (user.role === 'student') {
-      profile = await StudentProfile.findOne({ userId: user._id });
-    } else if (user.role === 'college') {
-      profile = await College.findOne({ userId: user._id });
-    }
-
-    const token = generateToken(user._id, user.role);
-
     res.json({
-      _id: user._id,
-      email: user.email,
-      role: user.role,
-      token,
-      profile,
+      isVerified: true,
       message: 'Email verified successfully!',
     });
   } catch (error) {
@@ -218,92 +205,29 @@ const resendOtp = async (req, res) => {
 
     const otp = generate6DigitOtp();
     user.otp = otp;
-    user.otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 mins
+    user.otpExpires = new Date(Date.now() + 15 * 60 * 1000); // 15 mins
     await user.save();
 
     await sendEmail({
       to: user.email,
-      subject: 'UNIVERSE - Resend Verification OTP',
-      text: `Your new OTP for UNIVERSE email verification is: ${otp}. It is valid for 10 minutes.`,
+      subject: 'UNIVERSE - Verification OTP Code',
+      text: `Your new OTP for UNIVERSE email verification is: ${otp}. It is valid for 15 minutes.`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 500px; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
           <h2 style="color: #4f46e5; margin-bottom: 8px;">UNIVERSE College Discovery</h2>
-          <p>Here is your requested new 6-digit verification code:</p>
+          <p>Here is your requested 6-digit email verification code:</p>
           <div style="background-color: #f1f5f9; padding: 15px; text-align: center; border-radius: 6px; margin: 20px 0;">
             <span style="font-size: 28px; font-weight: bold; letter-spacing: 6px; color: #4f46e5;">${otp}</span>
           </div>
-          <p style="font-size: 13px; color: #64748b;">This OTP code is valid for 10 minutes.</p>
+          <p style="font-size: 13px; color: #64748b;">This OTP code is valid for 15 minutes.</p>
         </div>
       `,
     });
 
-    res.json({ message: 'A new 6-digit OTP has been sent to your email.' });
+    res.json({ message: 'A 6-digit OTP has been sent to your email.' });
   } catch (error) {
     console.error('Resend OTP error:', error);
     res.status(500).json({ message: error.message || 'Server error during resend OTP' });
-  }
-};
-
-// @desc    Authenticate user & get token
-// @route   POST /api/auth/login
-// @access  Public
-const login = async (req, res) => {
-  try {
-    const { email, password } = req.body;
-
-    const user = await User.findOne({ email: email.toLowerCase() });
-    if (!user || !(await user.matchPassword(password))) {
-      return res.status(401).json({ message: 'Invalid email or password' });
-    }
-
-    if (!user.isVerified) {
-      // Send fresh OTP if user tries to log in without verification
-      const otp = generate6DigitOtp();
-      user.otp = otp;
-      user.otpExpires = new Date(Date.now() + 10 * 60 * 1000);
-      await user.save();
-
-      await sendEmail({
-        to: user.email,
-        subject: 'UNIVERSE - Verify Your Email Address (OTP)',
-        text: `Your OTP for UNIVERSE email verification is: ${otp}. It is valid for 10 minutes.`,
-        html: `
-          <div style="font-family: Arial, sans-serif; max-width: 500px; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
-            <h2 style="color: #4f46e5; margin-bottom: 8px;">UNIVERSE College Discovery</h2>
-            <p>Please enter this 6-digit OTP to complete your email verification:</p>
-            <div style="background-color: #f1f5f9; padding: 15px; text-align: center; border-radius: 6px; margin: 20px 0;">
-              <span style="font-size: 28px; font-weight: bold; letter-spacing: 6px; color: #4f46e5;">${otp}</span>
-            </div>
-          </div>
-        `,
-      });
-
-      return res.status(403).json({
-        requiresVerification: true,
-        email: user.email,
-        message: 'Your email address is not verified yet. A 6-digit OTP has been sent to your email.',
-      });
-    }
-
-    let profile = null;
-    if (user.role === 'student') {
-      profile = await StudentProfile.findOne({ userId: user._id });
-    } else if (user.role === 'college') {
-      profile = await College.findOne({ userId: user._id });
-    }
-
-    const token = generateToken(user._id, user.role);
-
-    res.json({
-      _id: user._id,
-      email: user.email,
-      role: user.role,
-      token,
-      profile,
-    });
-  } catch (error) {
-    console.error('Login error:', error);
-    res.status(500).json({ message: error.message || 'Server error during login' });
   }
 };
 

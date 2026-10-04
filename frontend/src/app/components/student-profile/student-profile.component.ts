@@ -22,6 +22,15 @@ export class StudentProfileComponent implements OnInit {
   activeTab: 'overview' | 'edit' | 'shortlist' = 'overview';
   copiedLink = false;
 
+  // OTP Modal State
+  showOtpModal = false;
+  otp = '';
+  otpSuccess = '';
+  otpError = '';
+  isVerifyingOtp = false;
+  resendCooldown = 0;
+  timerInterval: any = null;
+
   // Form helpers
   coursesInput = '';
   locationsInput = '';
@@ -91,6 +100,78 @@ export class StudentProfileComponent implements OnInit {
     setTimeout(() => {
       this.copiedLink = false;
     }, 2500);
+  }
+
+  openOtpModal() {
+    this.showOtpModal = true;
+    this.otp = '';
+    this.otpSuccess = '';
+    this.otpError = '';
+  }
+
+  closeOtpModal() {
+    this.showOtpModal = false;
+  }
+
+  onVerifyOtpModal() {
+    const email = this.authService.currentUser()?.email;
+    if (!email || !this.otp || this.otp.trim().length !== 6) {
+      this.otpError = 'Please enter a valid 6-digit OTP code.';
+      return;
+    }
+
+    this.isVerifyingOtp = true;
+    this.otpError = '';
+    this.otpSuccess = '';
+
+    this.authService.verifyOtp(email, this.otp.trim()).subscribe({
+      next: () => {
+        this.isVerifyingOtp = false;
+        this.otpSuccess = 'Email verified successfully!';
+        setTimeout(() => {
+          this.closeOtpModal();
+        }, 1500);
+      },
+      error: (err) => {
+        this.isVerifyingOtp = false;
+        this.otpError = err.error?.message || 'Invalid or expired OTP code.';
+      },
+    });
+  }
+
+  onResendOtpModal() {
+    if (this.resendCooldown > 0) return;
+
+    const email = this.authService.currentUser()?.email;
+    if (!email) return;
+
+    this.isVerifyingOtp = true;
+    this.otpError = '';
+    this.otpSuccess = '';
+
+    this.authService.resendOtp(email).subscribe({
+      next: (res) => {
+        this.isVerifyingOtp = false;
+        this.otpSuccess = res.message || 'OTP code sent to your email!';
+        this.startResendTimer();
+      },
+      error: (err) => {
+        this.isVerifyingOtp = false;
+        this.otpError = err.error?.message || 'Failed to resend OTP.';
+      },
+    });
+  }
+
+  startResendTimer() {
+    this.resendCooldown = 60;
+    if (this.timerInterval) clearInterval(this.timerInterval);
+    this.timerInterval = setInterval(() => {
+      if (this.resendCooldown > 0) {
+        this.resendCooldown--;
+      } else {
+        clearInterval(this.timerInterval);
+      }
+    }, 1000);
   }
 
   onSave() {

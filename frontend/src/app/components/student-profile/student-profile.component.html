@@ -24,6 +24,19 @@
           <button class="btn-insta-action" (click)="copyProfileLink()">
             {{ copiedLink ? '✓ Copied!' : '🔗 Share' }}
           </button>
+          <button
+            *ngIf="!authService.isEmailVerified()"
+            (click)="openOtpModal()"
+            class="btn-insta-action btn-verify-action"
+          >
+            ⚠️ Verify Email
+          </button>
+          <span
+            *ngIf="authService.isEmailVerified()"
+            class="badge-verified-inline"
+          >
+            ✓ Verified
+          </span>
         </div>
       </div>
 
@@ -143,6 +156,15 @@
             <span class="label">Annual Budget:</span>
             <span class="val">
               ₹{{ (profile.preferences.budgetMin || 0) | number }} - ₹{{ (profile.preferences.budgetMax || 500000) | number }}/year
+            </span>
+          </div>
+          <div class="info-row">
+            <span class="label">Email Verification:</span>
+            <span class="val" *ngIf="authService.isEmailVerified()">
+              <span class="badge-verified-inline">✓ Verified</span>
+            </span>
+            <span class="val" *ngIf="!authService.isEmailVerified()">
+              <button class="btn-verify-now" (click)="openOtpModal()">⚠️ Verify Now</button>
             </span>
           </div>
         </div>
@@ -316,6 +338,56 @@
         </div>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- Optional Email OTP Verification Modal -->
+<div class="modal-overlay" *ngIf="showOtpModal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3>✉️ Verify Email Address</h3>
+      <button (click)="closeOtpModal()" class="btn-close">&times;</button>
+    </div>
+
+    <p class="modal-subtitle">
+      Send or enter the 6-digit OTP code sent to <strong>{{ authService.currentUser()?.email }}</strong>
+    </p>
+
+    <div *ngIf="otpSuccess" class="alert-success">✓ {{ otpSuccess }}</div>
+    <div *ngIf="otpError" class="alert-error">⚠️ {{ otpError }}</div>
+
+    <form (ngSubmit)="onVerifyOtpModal()" class="modal-form">
+      <div class="form-group">
+        <label for="profOtpCode">6-Digit OTP Code</label>
+        <input
+          type="text"
+          id="profOtpCode"
+          [(ngModel)]="otp"
+          name="otp"
+          placeholder="123456"
+          maxlength="6"
+          class="otp-modal-input"
+          required
+        />
+      </div>
+
+      <div class="modal-actions">
+        <button type="submit" [disabled]="isVerifyingOtp || otp.length !== 6" class="btn-save-profile">
+          <span *ngIf="!isVerifyingOtp">Verify OTP</span>
+          <span *ngIf="isVerifyingOtp">Verifying...</span>
+        </button>
+
+        <button
+          type="button"
+          (click)="onResendOtpModal()"
+          [disabled]="isVerifyingOtp || resendCooldown > 0"
+          class="btn-insta-action"
+        >
+          <span *ngIf="resendCooldown === 0">Send / Resend OTP</span>
+          <span *ngIf="resendCooldown > 0">Resend in {{ resendCooldown }}s</span>
+        </button>
+      </div>
+    </form>
   </div>
 </div>
 

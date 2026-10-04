@@ -40,11 +40,11 @@ export class AuthService {
     );
   }
 
-  verifyOtp(email: string, otp: string): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.apiUrl}/verify-otp`, { email, otp }).pipe(
+  verifyOtp(email: string, otp: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/verify-otp`, { email, otp }).pipe(
       tap((res) => {
-        if (res && res.token) {
-          this.saveAuth(res);
+        if (res && res.isVerified) {
+          this.markVerifiedLocally();
         }
       })
     );
@@ -69,9 +69,17 @@ export class AuthService {
     this.currentUser.set(null);
   }
 
-  private saveAuth(res: AuthResponse) {
+  saveAuth(res: AuthResponse) {
     localStorage.setItem('universe_auth', JSON.stringify(res));
     this.currentUser.set(res);
+  }
+
+  markVerifiedLocally() {
+    const current = this.currentUser();
+    if (current) {
+      const updated = { ...current, isVerified: true };
+      this.saveAuth(updated);
+    }
   }
 
   getToken(): string | null {
@@ -84,6 +92,12 @@ export class AuthService {
 
   isLoggedIn(): boolean {
     return !!this.currentUser()?.token;
+  }
+
+  isEmailVerified(): boolean {
+    const user = this.currentUser();
+    if (!user) return false;
+    return user.isVerified !== false;
   }
 
   isStudent(): boolean {

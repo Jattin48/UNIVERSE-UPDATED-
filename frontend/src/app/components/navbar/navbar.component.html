@@ -34,6 +34,22 @@
 
       <ng-template #userMenu>
         <div class="user-badge">
+          <button
+            *ngIf="!authService.isEmailVerified()"
+            (click)="openOtpModal()"
+            class="btn-verify-chip"
+            title="Click to verify your email address with OTP"
+          >
+            ⚠️ Verify Email
+          </button>
+          <span
+            *ngIf="authService.isEmailVerified()"
+            class="btn-verified-chip"
+            title="Email Verified"
+          >
+            ✓ Verified
+          </span>
+
           <span class="role-chip" [ngClass]="authService.getUserRole() || ''">
             {{ authService.getUserRole() | uppercase }}
           </span>
@@ -44,3 +60,53 @@
     </div>
   </div>
 </nav>
+
+<!-- Optional Email OTP Verification Modal -->
+<div class="modal-overlay" *ngIf="showOtpModal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3>✉️ Verify Email Address</h3>
+      <button (click)="closeOtpModal()" class="btn-close">&times;</button>
+    </div>
+
+    <p class="modal-subtitle">
+      Send or enter the 6-digit OTP code sent to <strong>{{ authService.currentUser()?.email }}</strong>
+    </p>
+
+    <div *ngIf="otpSuccess" class="alert-success">✓ {{ otpSuccess }}</div>
+    <div *ngIf="otpError" class="alert-error">⚠️ {{ otpError }}</div>
+
+    <form (ngSubmit)="onVerifyOtpModal()" class="modal-form">
+      <div class="form-group">
+        <label for="navOtpCode">6-Digit OTP Code</label>
+        <input
+          type="text"
+          id="navOtpCode"
+          [(ngModel)]="otp"
+          name="otp"
+          placeholder="123456"
+          maxlength="6"
+          class="otp-modal-input"
+          required
+        />
+      </div>
+
+      <div class="modal-actions">
+        <button type="submit" [disabled]="isVerifying || otp.length !== 6" class="btn-primary">
+          <span *ngIf="!isVerifying">Verify OTP</span>
+          <span *ngIf="isVerifying">Verifying...</span>
+        </button>
+
+        <button
+          type="button"
+          (click)="onResendOtpModal()"
+          [disabled]="isVerifying || resendCooldown > 0"
+          class="btn-outline"
+        >
+          <span *ngIf="resendCooldown === 0">Send / Resend OTP</span>
+          <span *ngIf="resendCooldown > 0">Resend in {{ resendCooldown }}s</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

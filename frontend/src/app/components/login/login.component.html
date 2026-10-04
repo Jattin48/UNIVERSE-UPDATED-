@@ -1,109 +1,47 @@
 <div class="auth-card-container">
   <div class="auth-card">
-    <ng-container *ngIf="!isVerifyingOtp; else otpScreen">
-      <div class="auth-header">
-        <h2>Welcome Back to UNIVERSE</h2>
-        <p>Log in to access your college discovery portal</p>
+    <div class="auth-header">
+      <h2>Welcome Back to UNIVERSE</h2>
+      <p>Log in to access your college discovery portal</p>
+    </div>
+
+    <div *ngIf="errorMessage" class="alert-error">
+      {{ errorMessage }}
+    </div>
+
+    <form (ngSubmit)="onSubmit()" class="auth-form">
+      <div class="form-group">
+        <label for="email">Email Address</label>
+        <input
+          type="email"
+          id="email"
+          [(ngModel)]="email"
+          name="email"
+          placeholder="e.g. student@example.com"
+          required
+        />
       </div>
 
-      <div *ngIf="errorMessage" class="alert-error">
-        {{ errorMessage }}
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input
+          type="password"
+          id="password"
+          [(ngModel)]="password"
+          name="password"
+          placeholder="••••••••"
+          required
+        />
       </div>
 
-      <form (ngSubmit)="onSubmit()" class="auth-form">
-        <div class="form-group">
-          <label for="email">Email Address</label>
-          <input
-            type="email"
-            id="email"
-            [(ngModel)]="email"
-            name="email"
-            placeholder="e.g. student@example.com"
-            required
-          />
-        </div>
+      <button type="submit" [disabled]="isLoading" class="btn-submit">
+        <span *ngIf="!isLoading">Log In</span>
+        <span *ngIf="isLoading">Logging in...</span>
+      </button>
+    </form>
 
-        <div class="form-group">
-          <label for="password">Password</label>
-          <input
-            type="password"
-            id="password"
-            [(ngModel)]="password"
-            name="password"
-            placeholder="••••••••"
-            required
-          />
-        </div>
-
-        <button type="submit" [disabled]="isLoading" class="btn-submit">
-          <span *ngIf="!isLoading">Log In</span>
-          <span *ngIf="isLoading">Logging in...</span>
-        </button>
-      </form>
-
-      <div class="auth-footer">
-        <p>Don't have an account? <a routerLink="/signup">Sign up here</a></p>
-      </div>
-    </ng-container>
-
-    <!-- OTP Verification Screen -->
-    <ng-template #otpScreen>
-      <div class="otp-header">
-        <div class="otp-icon">✉️</div>
-        <h2>Verify your Email</h2>
-        <p>Enter the 6-digit verification code sent to<br /><strong>{{ email }}</strong></p>
-      </div>
-
-      <div *ngIf="successMessage" class="alert-success">
-        ✓ {{ successMessage }}
-      </div>
-
-      <div *ngIf="errorMessage" class="alert-error">
-        {{ errorMessage }}
-      </div>
-
-      <form (ngSubmit)="onVerifyOtp()" class="otp-form">
-        <div class="form-group">
-          <label for="otpCode">Enter 6-Digit OTP Code</label>
-          <input
-            type="text"
-            id="otpCode"
-            [(ngModel)]="otp"
-            name="otp"
-            placeholder="123456"
-            maxlength="6"
-            pattern="[0-9]{6}"
-            class="otp-input"
-            autocomplete="one-time-code"
-            required
-            autofocus
-          />
-        </div>
-
-        <button type="submit" [disabled]="isLoading || otp.length !== 6" class="btn-submit btn-verify">
-          <span *ngIf="!isLoading">Verify & Log In</span>
-          <span *ngIf="isLoading">Verifying OTP...</span>
-        </button>
-      </form>
-
-      <div class="otp-footer">
-        <p *ngIf="resendCooldown > 0" class="cooldown-text">
-          Resend code in <strong>{{ resendCooldown }}s</strong>
-        </p>
-        <button
-          *ngIf="resendCooldown === 0"
-          type="button"
-          (click)="onResendOtp()"
-          [disabled]="isLoading"
-          class="btn-resend"
-        >
-          🔄 Resend OTP Code
-        </button>
-
-        <button type="button" (click)="backToLogin()" class="btn-back">
-          ← Back to Login
-        </button>
-      </div>
-    </ng-template>
+    <div class="auth-footer">
+      <p>Don't have an account? <a routerLink="/signup">Sign up here</a></p>
+    </div>
   </div>
 </div>
