@@ -82,6 +82,11 @@ const sendEmail = async ({ to, subject, html, text }) => {
       return result;
     } catch (err) {
       console.error('[RESEND API ERROR]:', err.message);
+      console.log('\n====================================================');
+      console.log(`[RESEND TEST MODE FALLBACK]`);
+      console.log(`Resend Free tier sends live emails to: jattinmeghani4830@gmail.com`);
+      console.log(`[OTP CODE FOR VERIFICATION (${to})]: ${extractedOtp || 'Check User record'}`);
+      console.log('====================================================\n');
     }
   }
 
