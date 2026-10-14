@@ -21,13 +21,28 @@ connectDB();
 app.use(cors());
 app.use(express.json());
 
+
+// global limiter
+const globalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes ka window
+  max: 100, // Har IP se 15 minute me max 100 requests allow hongi
+  standardHeaders: true, // `RateLimit-*` headers return karega
+  legacyHeaders: false, // `X-RateLimit-*` headers disable karega
+  message: {
+    status: 429,
+    message: 'Too many requests from this IP, please try again after 15 minutes.'
+  }
+});
+
+
+
 // Rate Limiter for Auth endpoints
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
+  max: 5, // limit each IP to 100 requests per windowMs
   message: { message: 'Too many auth requests from this IP, please try again after 15 minutes' },
 });
-
+app.use('/api', globalLimiter)
 app.use('/api/auth', authLimiter, require('./routes/authRoutes'));
 app.use('/api/students', require('./routes/studentRoutes'));
 app.use('/api/colleges', require('./routes/collegeRoutes'));

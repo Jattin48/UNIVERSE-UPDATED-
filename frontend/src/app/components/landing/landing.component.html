@@ -1,0 +1,309 @@
+<!-- ==================== NAVBAR SPACER ==================== -->
+<div class="nav-spacer"></div>
+
+<!-- ==================== HERO SECTION ==================== -->
+<section class="hero-section">
+  <!-- Animated orbs background -->
+  <div class="hero-bg">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+    <div class="mesh-grid"></div>
+  </div>
+
+  <div class="hero-content">
+    <div class="hero-badge">
+      <span class="badge-dot"></span>
+      India's Smartest College Discovery Platform
+    </div>
+
+    <h1 class="hero-title">
+      Find Your Dream
+      <span class="gradient-text">College</span>
+      <br /> Without the Chaos
+    </h1>
+
+    <p class="hero-subtitle">
+      Search, compare, and shortlist from <strong>500+ colleges</strong> across India.
+      Filter by your 12th marks, fees, and location — then make your decision with confidence.
+    </p>
+
+    <div class="hero-cta">
+      <a routerLink="/colleges" class="btn-hero-primary">
+        🚀 Explore Colleges
+      </a>
+      <a *ngIf="!authService.isLoggedIn()" routerLink="/signup" class="btn-hero-secondary">
+        Create Free Account →
+      </a>
+      <a *ngIf="authService.isLoggedIn()" routerLink="/student/profile" class="btn-hero-secondary">
+        My Profile →
+      </a>
+    </div>
+
+    <div class="hero-trust">
+      <span>✓ Free Forever</span>
+      <span>✓ No Registration Required to Browse</span>
+      <span>✓ Verified College Data</span>
+    </div>
+  </div>
+
+  <!-- Floating College Cards Mockup -->
+  <div class="hero-visual">
+    <div class="floating-card card-f1">
+      <div class="fc-header">
+        <div class="fc-avatar">IIT</div>
+        <div>
+          <div class="fc-name">IIT Delhi</div>
+          <div class="fc-loc">📍 New Delhi</div>
+        </div>
+        <div class="fc-rank">#2</div>
+      </div>
+      <div class="fc-tags">
+        <span class="fc-tag tag-gov">Government</span>
+        <span class="fc-tag tag-rating">★ 4.9</span>
+      </div>
+      <div class="fc-stats">
+        <div><span>Cutoff</span><strong>98%</strong></div>
+        <div><span>Fees/yr</span><strong>₹2.2L</strong></div>
+      </div>
+    </div>
+
+    <div class="floating-card card-f2">
+      <div class="fc-header">
+        <div class="fc-avatar bits">BITS</div>
+        <div>
+          <div class="fc-name">BITS Pilani</div>
+          <div class="fc-loc">📍 Rajasthan</div>
+        </div>
+        <div class="fc-rank">#18</div>
+      </div>
+      <div class="fc-tags">
+        <span class="fc-tag tag-priv">Private</span>
+        <span class="fc-tag tag-rating">★ 4.8</span>
+      </div>
+      <div class="fc-stats">
+        <div><span>Cutoff</span><strong>95%</strong></div>
+        <div><span>Fees/yr</span><strong>₹5.2L</strong></div>
+      </div>
+    </div>
+
+    <div class="floating-card card-f3">
+      <div class="fc-header">
+        <div class="fc-avatar srcc">SRC</div>
+        <div>
+          <div class="fc-name">SRCC Delhi</div>
+          <div class="fc-loc">📍 New Delhi</div>
+        </div>
+        <div class="fc-rank">#5</div>
+      </div>
+      <div class="fc-tags">
+        <span class="fc-tag tag-gov">Government</span>
+        <span class="fc-tag tag-rating">★ 4.9</span>
+      </div>
+      <div class="fc-stats">
+        <div><span>Cutoff</span><strong>99%</strong></div>
+        <div><span>Fees/yr</span><strong>₹45K</strong></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="hero-scroll-indicator">
+    <div class="scroll-line"></div>
+    <span>Scroll to explore</span>
+  </div>
+</section>
+
+<!-- ==================== STATS SECTION ==================== -->
+<section class="stats-section reveal">
+  <div class="stats-grid">
+    @for (stat of stats; track stat.label) {
+      <div class="stat-card">
+        <div class="stat-number">{{ stat.current | number }}<span class="stat-suffix">{{ stat.suffix }}</span></div>
+        <div class="stat-label">{{ stat.label }}</div>
+      </div>
+    }
+  </div>
+</section>
+
+<!-- ==================== HOW IT WORKS ==================== -->
+<section class="how-section reveal">
+  <div class="section-header">
+    <div class="section-badge">How It Works</div>
+    <h2>Your College Journey in <span class="gradient-text">3 Simple Steps</span></h2>
+    <p>From discovery to decision — we guide you every step of the way.</p>
+  </div>
+
+  <div class="steps-grid">
+    @for (step of steps; track step.number) {
+      <div class="step-card">
+        <div class="step-number">{{ step.number }}</div>
+        <div class="step-icon">{{ step.icon }}</div>
+        <h3>{{ step.title }}</h3>
+        <p>{{ step.desc }}</p>
+        <div class="step-connector" *ngIf="step.number !== '03'"></div>
+      </div>
+    }
+  </div>
+</section>
+
+<!-- ==================== FEATURES ==================== -->
+<section class="features-section reveal">
+  <div class="section-header">
+    <div class="section-badge">Platform Features</div>
+    <h2>Everything You Need to <span class="gradient-text">Decide Smarter</span></h2>
+    <p>Powerful tools designed to simplify the most important decision of your academic life.</p>
+  </div>
+
+  <div class="features-grid">
+    @for (feature of features; track feature.title) {
+      <div class="feature-card">
+        <div class="feature-icon-wrap">
+          <span class="feature-icon">{{ feature.icon }}</span>
+        </div>
+        <h3>{{ feature.title }}</h3>
+        <p>{{ feature.desc }}</p>
+      </div>
+    }
+  </div>
+</section>
+
+<!-- ==================== COLLEGE PREVIEW ==================== -->
+<section class="colleges-preview-section reveal">
+  <div class="section-header">
+    <div class="section-badge">Featured Colleges</div>
+    <h2>Browse <span class="gradient-text">Top Institutions</span> Across India</h2>
+    <p>Real-time data on rankings, cutoffs, fees, and more for India's top colleges.</p>
+  </div>
+
+  <div class="college-cards-grid">
+    @for (college of sampleColleges; track college.name) {
+      <div class="college-preview-card">
+        <div class="cp-top">
+          <div class="cp-badge" [ngClass]="college.tagClass">{{ college.tag }}</div>
+          <div class="cp-rank">NIRF #{{ college.nirfRank }}</div>
+        </div>
+        <div class="cp-avatar-wrap">
+          <div class="cp-avatar">{{ college.name.substring(0, 3).toUpperCase() }}</div>
+        </div>
+        <h3 class="cp-name">{{ college.name }}</h3>
+        <p class="cp-location">📍 {{ college.city }}, {{ college.state }}</p>
+        <div class="cp-type-badge" [class.govt]="college.type === 'Government'" [class.priv]="college.type === 'Private'">
+          {{ college.type }}
+        </div>
+        <div class="cp-stats-row">
+          <div class="cp-stat">
+            <span class="cps-label">Cutoff</span>
+            <span class="cps-value">{{ college.cutoff }}%</span>
+          </div>
+          <div class="cp-divider"></div>
+          <div class="cp-stat">
+            <span class="cps-label">Annual Fees</span>
+            <span class="cps-value">{{ college.fee }}</span>
+          </div>
+          <div class="cp-divider"></div>
+          <div class="cp-stat">
+            <span class="cps-label">Rating</span>
+            <span class="cps-value">⭐ {{ college.rating }}</span>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+
+  <div class="section-cta">
+    <a routerLink="/colleges" class="btn-hero-primary">View All 500+ Colleges →</a>
+  </div>
+</section>
+
+<!-- ==================== ROLE CARDS ==================== -->
+<section class="roles-section reveal">
+  <div class="section-header">
+    <div class="section-badge">Who Is UNIVERSE For?</div>
+    <h2>A Platform Built for <span class="gradient-text">Everyone</span></h2>
+    <p>Whether you're a student, a college, or an administrator — we have you covered.</p>
+  </div>
+
+  <div class="roles-grid">
+    @for (role of roles; track role.title) {
+      <div class="role-card" [ngClass]="role.gradient">
+        <div class="role-icon">{{ role.icon }}</div>
+        <h3>{{ role.title }}</h3>
+        <p>{{ role.desc }}</p>
+        <a [routerLink]="role.link" class="role-cta">{{ role.cta }} →</a>
+      </div>
+    }
+  </div>
+</section>
+
+<!-- ==================== CTA BANNER ==================== -->
+<section class="cta-banner reveal">
+  <div class="cta-banner-bg">
+    <div class="orb orb-cta-1"></div>
+    <div class="orb orb-cta-2"></div>
+  </div>
+  <div class="cta-banner-content">
+    <h2>Ready to Find Your Dream College?</h2>
+    <p>Join thousands of students who found their perfect institution with UNIVERSE.</p>
+    <div class="cta-banner-btns">
+      <a routerLink="/colleges" class="btn-hero-primary">🚀 Explore Now</a>
+      <a *ngIf="!authService.isLoggedIn()" routerLink="/signup" class="btn-hero-secondary">Sign Up Free →</a>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== FOOTER ==================== -->
+<footer class="site-footer">
+  <div class="footer-grid">
+    <!-- Brand -->
+    <div class="footer-brand">
+      <div class="footer-logo">
+        <span class="brand-universe">UNIVERSE</span>
+        <span class="brand-tag">College Discovery</span>
+      </div>
+      <p>India's most intelligent platform for college discovery, comparison, and shortlisting.</p>
+      <div class="footer-socials">
+        <a href="#" class="social-link" aria-label="GitHub">⚙️</a>
+        <a href="#" class="social-link" aria-label="LinkedIn">💼</a>
+        <a href="#" class="social-link" aria-label="Twitter">🐦</a>
+        <a href="#" class="social-link" aria-label="Instagram">📸</a>
+      </div>
+    </div>
+
+    <!-- Students -->
+    <div class="footer-col">
+      <h4>For Students</h4>
+      <ul>
+        <li><a routerLink="/colleges">Explore Colleges</a></li>
+        <li><a routerLink="/signup">Create Account</a></li>
+        <li><a routerLink="/student/profile">My Profile</a></li>
+        <li><a routerLink="/student/shortlist">Shortlisted</a></li>
+      </ul>
+    </div>
+
+    <!-- Colleges -->
+    <div class="footer-col">
+      <h4>For Institutions</h4>
+      <ul>
+        <li><a routerLink="/signup">Register College</a></li>
+        <li><a routerLink="/college/dashboard">College Dashboard</a></li>
+        <li><a routerLink="/login">Admin Login</a></li>
+      </ul>
+    </div>
+
+    <!-- Platform -->
+    <div class="footer-col">
+      <h4>Platform</h4>
+      <ul>
+        <li><a href="#">About UNIVERSE</a></li>
+        <li><a href="#">Privacy Policy</a></li>
+        <li><a href="#">Terms of Service</a></li>
+        <li><a routerLink="/login">Login</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="footer-bottom">
+    <span>© 2026 UNIVERSE College Discovery Platform. All rights reserved.</span>
+    <span>Built with ❤️ using Angular 18 & Node.js</span>
+  </div>
+</footer>
