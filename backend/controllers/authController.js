@@ -14,9 +14,7 @@ const generate6DigitOtp = () => {
   return Math.floor(100000 + Math.random() * 900000).toString();
 };
 
-// @desc    Register new user & return instant token (optional email verification)
-// @route   POST /api/auth/signup
-// @access  Public
+
 const signup = async (req, res) => {
   try {
     const { email, password, role, name, phone, collegeName, city, state, collegeType } = req.body;

@@ -1,7 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { asyncScheduler, EMPTY, Subject, Subscription } from 'rxjs';
+import { catchError, debounceTime, distinctUntilChanged, switchMap, throttleTime } from 'rxjs/operators';
 import { CollegeService } from '../../services/college.service';
 import { StudentService } from '../../services/student.service';
 import { AuthService } from '../../services/auth.service';
@@ -14,10 +16,14 @@ import { College } from '../../models/college.model';
   templateUrl: './college-search.component.html',
   styleUrls: ['./college-search.component.css'],
 })
-export class CollegeSearchComponent implements OnInit {
+export class CollegeSearchComponent implements OnInit, OnDestroy {
   colleges: College[] = [];
   isLoading = false;
   errorMessage = '';
+  private readonly searchQueryChanges = new Subject<string>();
+  private readonly searchRequests = new Subject<void>();
+  private readonly searchSubscriptions = new Subscription();
+  private lastRequestedSearchQuery = '';
 
   // Filter inputs
   searchQuery = '';
@@ -48,37 +54,69 @@ export class CollegeSearchComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    // Wait until typing pauses before triggering a search.
+    this.searchSubscriptions.add(
+      this.searchQueryChanges
+        .pipe(debounceTime(350), distinctUntilChanged())
+        .subscribe((query) => {
+          if (query.trim() !== this.lastRequestedSearchQuery) {
+            this.fetchColleges();
+          }
+        })
+    );
+
+    // Limit this browser to one search per second; the backend enforces the shared per-IP limit.
+    this.searchSubscriptions.add(
+      this.searchRequests
+        .pipe(throttleTime(1000, asyncScheduler, { leading: true, trailing: true }))
+        .pipe(
+          switchMap(() => {
+            this.isLoading = true;
+            this.errorMessage = '';
+            this.lastRequestedSearchQuery = this.searchQuery.trim();
+
+            const filters: any = {
+              searchQuery: this.lastRequestedSearchQuery,
+              course: this.course,
+              state: this.state,
+              city: this.city,
+              type: this.collegeType,
+              budgetMin: this.budgetMin,
+              budgetMax: this.budgetMax,
+              minRating: this.minRating,
+            };
+
+            return this.collegeService.searchColleges(filters).pipe(
+              catchError(() => {
+                this.isLoading = false;
+                this.errorMessage = 'Failed to load colleges. Make sure backend is running.';
+                return EMPTY;
+              })
+            );
+          })
+        )
+        .subscribe((res) => {
+          this.colleges = res;
+          this.isLoading = false;
+        })
+    );
+
     this.fetchColleges();
     if (this.authService.isStudent()) {
       this.loadStudentShortlist();
     }
   }
 
+  ngOnDestroy(): void {
+    this.searchSubscriptions.unsubscribe();
+  }
+
+  onSearchQueryChange(query: string): void {
+    this.searchQueryChanges.next(query);
+  }
+
   fetchColleges() {
-    this.isLoading = true;
-    this.errorMessage = '';
-
-    const filters: any = {
-      searchQuery: this.searchQuery,
-      course: this.course,
-      state: this.state,
-      city: this.city,
-      type: this.collegeType,
-      budgetMin: this.budgetMin,
-      budgetMax: this.budgetMax,
-      minRating: this.minRating,
-    };
-
-    this.collegeService.searchColleges(filters).subscribe({
-      next: (res) => {
-        this.colleges = res;
-        this.isLoading = false;
-      },
-      error: (err) => {
-        this.isLoading = false;
-        this.errorMessage = 'Failed to load colleges. Make sure backend is running.';
-      },
-    });
+    this.searchRequests.next();
   }
 
   resetFilters() {
