@@ -17,6 +17,8 @@
     "express-validator": "^7.1.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.4.1",
-    "nodemailer": "^10.0.13"
+    "nodemailer": "^10.0.13",
+    "rate-limit-redis": "^4.3.1",
+    "redis": "^4.7.1"
   }
 }

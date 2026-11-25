@@ -7,6 +7,7 @@
       <input
         type="text"
         [(ngModel)]="searchQuery"
+        (ngModelChange)="onSearchQueryChange($event)"
         (keyup.enter)="fetchColleges()"
         placeholder="Search by college name, course (e.g. B.Tech, BBA), or location..."
       />

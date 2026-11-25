@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { LandingComponent } from './components/landing/landing.component';
 import { CollegeSearchComponent } from './components/college-search/college-search.component';
 import { CollegeDetailComponent } from './components/college-detail/college-detail.component';
 import { LoginComponent } from './components/login/login.component';
@@ -11,7 +12,7 @@ import { authGuard } from './guards/auth.guard';
 import { roleGuard } from './guards/role.guard';
 
 export const routes: Routes = [
-  { path: '', redirectTo: 'colleges', pathMatch: 'full' },
+  { path: '', component: LandingComponent },
   { path: 'colleges', component: CollegeSearchComponent },
   { path: 'colleges/:id', component: CollegeDetailComponent },
   { path: 'login', component: LoginComponent },

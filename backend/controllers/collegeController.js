@@ -1,6 +1,9 @@
 const College = require('../models/College');
 const StudentProfile = require('../models/StudentProfile');
 
+// Controller handles all college-related requests such as search, profile management,
+// verification uploads, and lead tracking for a logged-in college account.
+
 // @desc    Search and filter approved colleges
 // @route   GET /api/colleges/search
 // @access  Public
@@ -20,21 +23,22 @@ const searchColleges = async (req, res) => {
       maxDistanceKm,
     } = req.query;
 
+    // Only show colleges that have already been approved by admin.
     let query = { registrationStatus: 'approved' };
 
-    // Course filter
+    // Apply course filter using a case-insensitive text match.
     if (course) {
       query['coursesOffered.name'] = { $regex: new RegExp(course, 'i') };
     }
 
-    // Budget range filter
+    // Filter by annual fee range if one or both bounds are provided.
     if (budgetMin || budgetMax) {
       query['coursesOffered.annualFee'] = {};
       if (budgetMin) query['coursesOffered.annualFee'].$gte = Number(budgetMin);
       if (budgetMax) query['coursesOffered.annualFee'].$lte = Number(budgetMax);
     }
 
-    // Location filter
+    // Narrow results by city or state using partial matches.
     if (city) {
       query['location.city'] = { $regex: new RegExp(city, 'i') };
     }
@@ -42,18 +46,18 @@ const searchColleges = async (req, res) => {
       query['location.state'] = { $regex: new RegExp(state, 'i') };
     }
 
-    // College type filter (Govt / Private / Deemed)
+    // Match multiple college types like Govt, Private, or Deemed.
     if (type) {
       const types = Array.isArray(type) ? type : type.split(',');
       query.type = { $in: types.map((t) => new RegExp(`^${t.trim()}$`, 'i')) };
     }
 
-    // Minimum rating
+    // Minimum rating filter for quality-based search.
     if (minRating) {
       query.rating = { $gte: Number(minRating) };
     }
 
-    // Search query keyword (name or location)
+    // Free-text search checks name, address, and offered courses together.
     if (searchQuery) {
       query.$or = [
         { name: { $regex: new RegExp(searchQuery, 'i') } },
@@ -63,7 +67,7 @@ const searchColleges = async (req, res) => {
       ];
     }
 
-    // Geo-location query if coordinates passed
+    // Get colleges near the user's coordinates when geolocation is provided.
     if (longitude && latitude) {
       const distanceMeters = (Number(maxDistanceKm) || 50) * 1000;
       query['location.coordinates'] = {
@@ -90,6 +94,7 @@ const searchColleges = async (req, res) => {
 // @access  Public
 const getCollegeById = async (req, res) => {
   try {
+    // Fetch a single college profile by MongoDB document ID.
     const college = await College.findById(req.params.id);
     if (!college) {
       return res.status(404).json({ message: 'College not found' });
@@ -105,7 +110,10 @@ const getCollegeById = async (req, res) => {
 // @access  Private (College)
 const getMyCollegeProfile = async (req, res) => {
   try {
+    // Find the profile connected to this authenticated college user.
     let college = await College.findOne({ userId: req.user._id });
+
+    // Auto-create a default college record if the college hasn't created one yet.
     if (!college) {
       college = await College.create({
         userId: req.user._id,
@@ -113,6 +121,7 @@ const getMyCollegeProfile = async (req, res) => {
         location: { city: 'New Delhi', state: 'Delhi', country: 'India', coordinates: [77.209, 28.6139] },
       });
     }
+
     res.json(college);
   } catch (error) {
     res.status(500).json({ message: error.message || 'Server error' });
@@ -136,11 +145,13 @@ const updateMyCollegeProfile = async (req, res) => {
       admissionProcess,
     } = req.body;
 
+    // Only the logged-in college can update its own listing.
     let college = await College.findOne({ userId: req.user._id });
     if (!college) {
       return res.status(404).json({ message: 'College listing not found' });
     }
 
+    // Update only defined fields so partial profile edits remain supported.
     if (name !== undefined) college.name = name;
     if (location !== undefined) college.location = { ...college.location, ...location };
     if (type !== undefined) college.type = type;
@@ -163,12 +174,14 @@ const updateMyCollegeProfile = async (req, res) => {
 // @access  Private (College)
 const uploadVerificationDocs = async (req, res) => {
   try {
+    // The request contains a list of verification files or document references.
     const { documents } = req.body; // Array of document URLs or names
     let college = await College.findOne({ userId: req.user._id });
     if (!college) {
       return res.status(404).json({ message: 'College profile not found' });
     }
 
+    // Append submitted documents to the existing verification list.
     if (Array.isArray(documents)) {
       college.documentsForVerification = [...college.documentsForVerification, ...documents];
       await college.save();
@@ -189,6 +202,7 @@ const uploadVerificationDocs = async (req, res) => {
 // @access  Private (College)
 const getCollegeLeads = async (req, res) => {
   try {
+    // Populate each interested student with key profile fields for quick lead review.
     const college = await College.findOne({ userId: req.user._id }).populate({
       path: 'interestedStudents.studentId',
       select: 'name phone class12 preferences',
