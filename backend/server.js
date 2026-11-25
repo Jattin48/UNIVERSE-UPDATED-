@@ -15,11 +15,6 @@ if (dns.setDefaultResultOrder) {
 dotenv.config();
 
 const redisUrl = process.env.REDIS_URL;
-const isProduction = process.env.NODE_ENV === 'production';
-
-if (!redisUrl && isProduction) {
-  throw new Error('REDIS_URL must be configured in production for shared rate limiting.');
-}
 
 let redisClient;
 if (redisUrl) {
@@ -98,8 +93,13 @@ const PORT = process.env.PORT || 5000;
 
 async function startServer() {
   if (redisClient) {
-    await redisClient.connect();
-    console.log('Connected to Redis for shared rate limiting.');
+    try {
+      await redisClient.connect();
+      console.log('Connected to Redis for shared rate limiting.');
+    } catch (error) {
+      console.error('Redis connection failed; falling back to in-memory rate limiting:', error.message);
+      redisClient = undefined;
+    }
   }
 
   configureRoutes();
