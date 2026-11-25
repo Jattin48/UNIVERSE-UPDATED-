@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const dns = require('dns');
+const mongoose = require('mongoose');
 const rateLimit = require('express-rate-limit');
 const { RedisStore } = require('rate-limit-redis');
 const { createClient } = require('redis');
@@ -80,6 +81,10 @@ function configureRoutes() {
       status: 'OK',
       app: 'UNIVERSE API',
       timestamp: new Date(),
+      database: {
+        connected: mongoose.connection.readyState === 1,
+        state: ['disconnected', 'connected', 'connecting', 'disconnecting'][mongoose.connection.readyState],
+      },
     });
   });
 
