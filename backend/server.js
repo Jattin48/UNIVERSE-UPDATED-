@@ -32,6 +32,9 @@ if (redisUrl) {
 
 const app = express();
 
+// Render terminates TLS and forwards the original client IP in X-Forwarded-For.
+app.set('trust proxy', 1);
+
 // Connect Database
 connectDB();
 
